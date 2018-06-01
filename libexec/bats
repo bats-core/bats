@@ -20,6 +20,7 @@ help() {
   echo "  -h, --help     Display this help message"
   echo "  -p, --pretty   Show results in pretty format (default for terminals)"
   echo "  -t, --tap      Show results in TAP format"
+  echo "  -u, --cppunit  Show results in CppUnit XML format"
   echo "  -v, --version  Display the version number"
   echo
   echo "  For more information, see https://github.com/bats-core/bats-core"
@@ -102,6 +103,7 @@ done
 unset count_flag pretty
 count_flag=''
 pretty=''
+cppunit=''
 [ -t 0 ] && [ -t 1 ] && pretty="1"
 [ -n "${CI:-}" ] && pretty=""
 
@@ -124,6 +126,9 @@ if [[ "${#options[@]}" -ne '0' ]]; then
       ;;
     "p" | "pretty" )
       pretty="1"
+      ;;
+    "u" | "cppunit" )
+      cppunit="1"
       ;;
     * )
       usage >&2
@@ -160,10 +165,14 @@ else
 fi
 
 set -o pipefail execfail
-if [ -z "$pretty" ]; then
+if [ -z "$pretty" ] && [ -z "$cppunit" ]; then
   exec "$command" $count_flag "${filenames[@]}"
 else
+  if [ -z "$cppunit" ]; then
+    formatter="bats-format-tap-stream"
+  else
+    formatter="bats-format-cppunit"
+  fi
   extended_syntax_flag="-x"
-  formatter="bats-format-tap-stream"
   exec "$command" $count_flag $extended_syntax_flag "${filenames[@]}" | "$formatter"
 fi

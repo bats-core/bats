@@ -1,0 +1,157 @@
+#!/usr/bin/env bash
+set -e
+
+_count=0
+_skipped=0
+_failures=0
+_name=""
+_in_msg=0
+
+begin() {
+  printf "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
+  printf "<TestRun>\n"
+}
+
+_fail_buffer=""
+
+fail_entry() {
+  printf "    <FailedTest id=\"%d\">\n" "$_count"
+}
+
+fail_exit() {
+  printf "    </FailedTest>\n"
+}
+
+fail_loc_mes_beg() {
+  printf "\n"
+  printf "      <Message>"
+}
+
+fail_loc_mes_end() {
+  printf "</Message>\n"
+}
+
+fail() {
+  if [[ $_in_msg == 1 ]]; then
+    fail_loc_mes_end
+    fail_exit
+  fi
+  fail_entry
+  printf "      <Name>%s</Name>\n" "$_name"
+  printf "      <FailureType>Assertion</FailureType>\n"
+}
+
+fail_loc() {
+  printf "\n"
+  printf "      <Location>\n"
+  printf "        <File>%s</File>\n" "${BASH_REMATCH[1]}"
+  printf "        <Line>%d</Line>\n" "${BASH_REMATCH[2]}"
+  printf "      </Location>\n"
+}
+
+fail_mes() {
+  if [[ $_in_msg == 0 ]]; then
+    fail_loc_mes_beg
+  fi
+  printf "\n%s\n" "$1"
+}
+
+fail_buffer() {
+  _fail_buffer="${_fail_buffer}$("$@")"
+}
+
+flush_fail_buffer() {
+  printf "  <FailedTests>\n"
+  printf "%s\n" "${_fail_buffer}"
+  if [[ $_in_msg == 1 ]]; then
+    fail_loc_mes_end
+    fail_exit
+  fi
+  printf "  </FailedTests>\n"
+  _fail_buffer=""
+}
+
+_pass_buffer=""
+
+pass_entry() {
+  printf "\n"
+  printf "    <Test id=\"%d\">\n" "$_count"
+}
+
+pass_exit() {
+  printf "    </Test>\n"
+}
+
+pass() {
+  pass_entry
+  printf "      <Name>%s</Name>\n" "$_name"
+  pass_exit
+}
+
+pass_buffer() {
+  _pass_buffer="${_pass_buffer}$("$@")"
+}
+
+flush_pass_buffer() {
+  printf "  <SuccessfulTests>"
+  printf "%s\n" "${_pass_buffer}"
+  printf "  </SuccessfulTests>\n"
+  _pass_buffer=""
+}
+
+summary() {
+  printf "  <Statistics>\n"
+  printf "    <Tests>%d</Tests>\n" "$_count"
+  printf "    <FailuresTotal>%d</FailuresTotal>\n" "$_failures"
+  printf "    <Errors>0</Errors>\n"
+  printf "    <Failures>%d</Failures>\n" "$_failures"
+  if [ "$_skipped" -gt 0 ]; then
+    printf "    <Skipped>%d</Skipped>\n" "$_skipped"
+  fi
+  printf "  </Statistics>\n"
+}
+
+end() {
+  printf "</TestRun>\n"
+}
+
+finish() {
+  begin
+  flush_fail_buffer
+  flush_pass_buffer
+  summary
+  end
+}
+
+trap finish EXIT
+
+while IFS= read -r line; do
+  case "$line" in
+  "ok "* )
+    let _count+=1
+    skip_expr="ok $_count [[:alnum:][:punct:][:space:]]* # skip.*?"
+    if [[ "$line" =~ $skip_expr ]]; then
+      let _skipped+=1
+    else
+      _name="${line#* $_count }"
+      pass_buffer pass
+    fi
+    ;;
+  "not ok "* )
+    let _count+=1
+    let _failures+=1
+    _name="${line#* $_count }"
+    fail_buffer fail
+    _in_msg=0
+    ;;
+  "# "* )
+    pos_expr="in test file ([^,]*), line ([[:digit:]]+)"
+    if [[ "$1" =~ $pos_expr ]]; then
+      fail_buffer fail_loc "${line:2}"
+    else
+      fail_buffer fail_mes "${line:2}"
+      _in_msg=1
+    fi
+    ;;
+  esac
+done
