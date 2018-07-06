@@ -168,9 +168,24 @@ bats_print_failed_command() {
   printf '%s' "#   \`${failed_command}' "
 
   if [[ $status -eq 1 ]]; then
-    echo "failed"
+    echo -n "failed"
   else
-    echo "failed with status $status"
+    echo -n "failed with status $status"
+  fi
+
+  # Evaluate the failed command to show the values of any variables involved,
+  # unless the failed command looks like it might contain side effects
+  if [[ "$failed_command" = *'`'* || "$failed_command" = *'$('* ]]; then
+    echo
+    echo "#   Not evaluating failed command because it contains \` or \$()"
+  elif [[ "$failed_command" = *'$#'* || "$failed_command" = *'$@'* ]]; then
+    echo
+    echo "#   Cannot evaluate \$# or \$@"
+    echo "#   Store them into a variable first to see the failing value"
+  else
+    echo ":"
+    ( eval echo \"$failed_command\" 2>&1 || true ) \
+      | sed "s/^/#   \`/; s/\$/'/"
   fi
 }
 
