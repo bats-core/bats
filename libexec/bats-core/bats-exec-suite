@@ -33,6 +33,7 @@ printf '1..%d\n' "$count"
 status=0
 offset=0
 for filename in "$@"; do
+  echo "# _filename=${filename##*/}"
   index=0
   {
     IFS= read -r # 1..n
