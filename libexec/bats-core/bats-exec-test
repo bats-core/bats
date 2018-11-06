@@ -63,13 +63,13 @@ load() {
 
 run() {
   local origFlags="$-"
-  set +eET
+  set -f +eET
   local origIFS="$IFS"
   output="$("$@" 2>&1)"
   status="$?"
   IFS=$'\n' lines=($output)
   IFS="$origIFS"
-  set "-$origFlags"
+  set "+f -$origFlags"
 }
 
 setup() {
