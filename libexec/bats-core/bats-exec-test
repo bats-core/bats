@@ -4,6 +4,7 @@ set -eET
 BATS_COUNT_ONLY=''
 BATS_TEST_FILTER=''
 BATS_EXTENDED_SYNTAX=''
+BATS_TRACE=''
 
 # Command and flags used by bats_perform_tests when it re-invokes bats-exec-test
 # in a new process to run bats_perform_test.
@@ -21,6 +22,10 @@ while [[ "$#" -ne 0 ]]; do
   -x)
     BATS_EXTENDED_SYNTAX='-x'
     BATS_PERFORM_TEST_CMD+=('-x')
+    ;;
+  --trace)
+    BATS_TRACE=1
+    BATS_PERFORM_TEST_CMD+=('--trace')
     ;;
   *)
     break
@@ -221,7 +226,35 @@ bats_debug_trap() {
     bats_capture_stack_trace
     BATS_LINENO="$BATS_CURRENT_LINENO"
     BATS_CURRENT_LINENO="${BASH_LINENO[0]}"
+
+    if [[ -n "$BATS_TRACE" ]]; then
+      bats_emit_trace
+    fi
   fi
+}
+
+bats_emit_trace() {
+  case "$BASH_COMMAND" in
+  '"$BATS_TEST_NAME" >> "$BATS_OUT" 2>&1'|'bats_test_begin '*)
+    return
+    ;;
+  esac
+
+  # If the `BASH_COMMAND` is the same, but `BATS_CURRENT_LINENO` is less than or
+  # equal to `BATS_LINENO` (the previous trap's `BASH_LINENO`), then this DEBUG
+  # trap is firing before the ERR trap of a failing command. Since we've printed
+  # the command before it failed, we don't want to print it a second time.
+  if [[ "$BASH_COMMAND" != "$BATS_PREVIOUS_COMMAND" || \
+        "$BATS_LINENO" -lt "$BATS_CURRENT_LINENO" ]]; then
+    local filename="${BASH_SOURCE[2]}"
+
+    if [[ "$filename" == "$BATS_TEST_SOURCE" ]]; then
+      filename="$BATS_TEST_FILENAME"
+    fi
+    printf '# %s:%d: %s\n' "${filename#$PWD/}" "$BATS_CURRENT_LINENO" \
+      "$BASH_COMMAND" >&3
+  fi
+  BATS_PREVIOUS_COMMAND="$BASH_COMMAND"
 }
 
 # For some versions of Bash, the `ERR` trap may not always fire for every
@@ -345,6 +378,7 @@ bats_perform_test() {
     BATS_CURRENT_LINENO=0
     BATS_LINENO=0
     BATS_STACK_TRACE=()
+    BATS_PREVIOUS_COMMAND=''
 
     BATS_TEST_COMPLETED=
     BATS_TEST_SKIPPED=

@@ -466,3 +466,61 @@ END_OF_ERR_MSG
   [ "${lines[5]}" = '# bar' ]
   [ "${lines[6]}" = '# baz' ]
 }
+
+@test "trace a passing test case" {
+  TEST_RESULT='PASS' run bats --trace "$FIXTURE_ROOT/trace.bats"
+  [ "$status" -eq 0 ]
+  [ "${#lines[@]}" -eq 5 ]
+
+  local file="$RELATIVE_FIXTURE_ROOT/trace.bats"
+
+  [ "${lines[1]}" = \
+    "# $file:6: run printf 'The TEST_RESULT is: %s\n' \"\$TEST_RESULT\"" ]
+  [ "${lines[2]}" = "# $file:7: evaluate_result \"\$output\"" ]
+  [ "${lines[3]}" = "# $file:2: [ \"\$1\" = 'The TEST_RESULT is: PASS' ]" ]
+  [ "${lines[4]}" = 'ok 1 traced test case' ]
+}
+
+@test "trace a failing test case" {
+  TEST_RESULT='FAIL' run bats -x "$FIXTURE_ROOT/trace.bats"
+  [ "$status" -eq 1 ]
+  [ "${#lines[@]}" -eq 8 ]
+
+  local file="$RELATIVE_FIXTURE_ROOT/trace.bats"
+
+  [ "${lines[1]}" = \
+    "# $file:6: run printf 'The TEST_RESULT is: %s\n' \"\$TEST_RESULT\"" ]
+  [ "${lines[2]}" = "# $file:7: evaluate_result \"\$output\"" ]
+  [ "${lines[3]}" = "# $file:2: [ \"\$1\" = 'The TEST_RESULT is: PASS' ]" ]
+  [ "${lines[4]}" = 'not ok 1 traced test case' ]
+  [ "${lines[5]}" = \
+    "# (from function \`evaluate_result' in file $file, line 2," ]
+  [ "${lines[6]}" = "#  in test file $file, line 7)" ]
+  [ "${lines[7]}" = "#   \`evaluate_result \"\$output\"' failed" ]
+}
+
+@test "trace a test case calling a recursive function" {
+  run bats -x "$FIXTURE_ROOT/trace-recursive.bats"
+
+  [ "$status" -eq 0 ]
+  [ "${#lines[@]}" -eq 17 ]
+
+  local file="$RELATIVE_FIXTURE_ROOT/trace-recursive.bats"
+
+  [ "${lines[1]}" = "# $file:16: do_recurse 2" ]
+  [ "${lines[2]}" = "# $file:2: local value=\"\$1\"" ]
+  [ "${lines[3]}" = "# $file:3: [[ \"\$value\" -eq 0 ]]" ]
+  [ "${lines[4]}" = "# $file:9: printf 'Recursing...\n'" ]
+  [ "${lines[5]}" = "# $file:10: printf 'Recursing...\n'" ]
+  [ "${lines[6]}" = "# $file:11: do_recurse \"\$((--value))\"" ]
+  [ "${lines[7]}" = "# $file:2: local value=\"\$1\"" ]
+  [ "${lines[8]}" = "# $file:3: [[ \"\$value\" -eq 0 ]]" ]
+  [ "${lines[9]}" = "# $file:9: printf 'Recursing...\n'" ]
+  [ "${lines[10]}" = "# $file:10: printf 'Recursing...\n'" ]
+  [ "${lines[11]}" = "# $file:11: do_recurse \"\$((--value))\"" ]
+  [ "${lines[12]}" = "# $file:2: local value=\"\$1\"" ]
+  [ "${lines[13]}" = "# $file:3: [[ \"\$value\" -eq 0 ]]" ]
+  [ "${lines[14]}" = "# $file:4: return" ]
+  [ "${lines[15]}" = "# $file:17: :" ]
+  [ "${lines[16]}" = "ok 1 traced test case with recursion" ]
+}

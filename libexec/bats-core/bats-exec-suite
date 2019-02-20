@@ -16,6 +16,9 @@ while [[ "$#" -ne 0 ]]; do
     flags+=('-f' "$filter")
     shift
     ;;
+  --trace)
+    flags+=('--trace')
+    ;;
   -x)
     extended_syntax_flag='-x'
     flags+=('-x')

@@ -20,7 +20,7 @@ usage() {
   while IFS= read -r line; do
     printf '%s\n' "$line"
   done <<END_OF_HELP_TEXT
-Usage: $cmd [-cr] [-f <regex>] [-p | -t] <test>...
+Usage: $cmd [-crx] [-f <regex>] [-p | -t] <test>...
        $cmd [-h | -v]
 
   <test> is the path to a Bats test file, or the path to a directory
@@ -33,6 +33,7 @@ Usage: $cmd [-cr] [-f <regex>] [-p | -t] <test>...
   -r, --recursive  Include tests in subdirectories
   -t, --tap        Show results in TAP format
   -v, --version    Display the version number
+  -x, --trace      Display Bash commands with file:line info as they're executed
 
   For more information, see https://github.com/bats-core/bats-core
 
@@ -61,7 +62,7 @@ export PATH="$BATS_ROOT/libexec/bats-core:$PATH"
 
 arguments=()
 
-# Unpack single-character options bundled together, e.g. -cr, -pr.
+# Unpack single-character options bundled together, e.g. -cr, -pr, -tx.
 for arg in "$@"; do
   if [[ "$arg" =~ ^-[^-]. ]]; then
     index=1
@@ -114,6 +115,9 @@ while [[ "$#" -ne 0 ]]; do
     ;;
   -p|--pretty)
     pretty=1
+    ;;
+  -x|--trace)
+    flags+=('--trace')
     ;;
   -*)
     abort "Bad command line option '$1'"
