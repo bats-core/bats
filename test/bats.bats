@@ -466,3 +466,14 @@ END_OF_ERR_MSG
   [ "${lines[5]}" = '# bar' ]
   [ "${lines[6]}" = '# baz' ]
 }
+
+
+# For the next test
+star(){
+  echo '*'
+}
+
+@test "output a single star" {
+  run star
+  [ "${lines[0]}" = '*' ]
+}
