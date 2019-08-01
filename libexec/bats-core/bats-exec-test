@@ -61,7 +61,7 @@ run() {
   local origIFS="$IFS"
   output="$("$@" 2>&1)"
   status="$?"
-  IFS=$'\n' lines=($output)
+  IFS=$'\n' read -rd '' -a lines <<<"$output"
   IFS="$origIFS"
   set "-$origFlags"
 }
