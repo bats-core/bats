@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 
 bats_capture_stack_trace() {
+	local internal_offset=${1:-0}
 	local test_file
 	local funcname
 	local i
 
 	BATS_STACK_TRACE=()
 
-	for ((i = 2; i != ${#FUNCNAME[@]}; ++i)); do
+	for ((i = $((2 + internal_offset)); i != ${#FUNCNAME[@]}; ++i)); do
 		# Use BATS_TEST_SOURCE if necessary to work around Bash < 4.4 bug whereby
 		# calling an exported function erases the test file's BASH_SOURCE entry.
 		test_file="${BASH_SOURCE[$i]:-$BATS_TEST_SOURCE}"
@@ -119,15 +120,25 @@ bats_trim_filename() {
 
 bats_debug_trap() {
 	# don't update the trace within library functions or we get backtraces from inside traps
-	if [[ "$1" != $BATS_ROOT/lib/* && "$1" != $BATS_ROOT/libexec/* ]]; then
-		# The last entry in the stack trace is not useful when en error occured:
-		# It is either duplicated (kinda correct) or has wrong line number (Bash < 4.4)
-		# Therefore we capture the stacktrace but use it only after the next debug
-		# trap fired.
-		# Expansion is required for empty arrays which otherwise error
-		BATS_CURRENT_STACK_TRACE=("${BATS_STACK_TRACE[@]+"${BATS_STACK_TRACE[@]}"}")
-		bats_capture_stack_trace
-	fi
+	local stack_trace_offset=
+	if [[ "$1" == $BATS_ROOT/lib/* || "$1" == $BATS_ROOT/libexec/* ]]; then
+        	if [[ "${FUNCNAME[1]}" != "run" ]]; then
+			return
+                fi
+
+                # We are inside 'run', which can throw a test failure.
+                # Make sure we log the calling function (presumably in user's
+                # .bats file) so we can emit proper line numbers in messages.
+                stack_trace_offset=1
+        fi
+
+	# The last entry in the stack trace is not useful when en error occured:
+	# It is either duplicated (kinda correct) or has wrong line number (Bash < 4.4)
+	# Therefore we capture the stacktrace but use it only after the next debug
+	# trap fired.
+	# Expansion is required for empty arrays which otherwise error
+	BATS_CURRENT_STACK_TRACE=("${BATS_STACK_TRACE[@]+"${BATS_STACK_TRACE[@]}"}")
+	bats_capture_stack_trace $stack_trace_offset
 }
 
 # For some versions of Bash, the `ERR` trap may not always fire for every

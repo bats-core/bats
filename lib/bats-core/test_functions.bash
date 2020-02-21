@@ -29,7 +29,37 @@ load() {
   source "${file}"
 }
 
+#########
+#  die  #  Abort with helpful and visible message
+#########
+die() {
+  printf "#/vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\n"  >&2
+  printf "#| FAIL: %s\n" "$1"                                      >&2
+  shift
+  # Any more?
+  for line in "$@"; do
+    printf "#|    > %s\n" "$line"                                  >&2
+  done
+
+  printf "#\\^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" >&2
+  false
+}
+
 run() {
+  local expected_rc=
+
+  # Possible first arguments: '!' = any nonzero, '=n' = exactly n
+  if [[ "$1" = '!' ]]; then
+    expected_rc=-1
+    shift
+  elif [[ "$1" =~ ^=([0-9]|[1-9][0-9]|[12][0-9][0-9])$ ]]; then
+    expected_rc=${1#=}
+    shift
+  fi
+
+  # stdout is emitted only on error; this echo is to help debug test failures
+  printf "${BATS_PS1}%s\n" "$*"
+
   local origFlags="$-"
   set +eET
   local origIFS="$IFS"
@@ -42,6 +72,37 @@ run() {
   IFS=$'\n' lines=($output)
   IFS="$origIFS"
   set "-$origFlags"
+
+  # Show results. Without quotes, multiple lines are glommed together into one
+  if [ -n "$output" ]; then
+    printf "%s\n" "$output"
+  fi
+
+  # Check exit status if requested
+  if [[ "$status" -ne 0 ]]; then
+    printf "[ rc=%d " $status
+    if [[ -n "$expected_rc" ]]; then
+      if [[ "$status" -eq "$expected_rc" ]]; then
+        printf "(expected) "
+      elif [[ $expected_rc -lt 0 ]]; then
+        printf "(expected any error)"
+        expected_rc=$status           # don't die below
+      else
+        printf "(** EXPECTED %d **) " $expected_rc;
+      fi
+    fi
+    printf "]\n"
+  fi
+
+  if [[ -n "$expected_rc" ]]; then
+    if [[ "$expected_rc" = "-1" ]]; then
+      if [[ "$status" -eq 0 ]]; then
+        die "exit code is $status; expected nonzero"
+      fi
+    elif [ "$status" -ne "$expected_rc" ]; then
+      die "exit code is $status; expected $expected_rc"
+    fi
+  fi
 }
 
 setup() {

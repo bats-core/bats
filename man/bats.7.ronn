@@ -34,18 +34,34 @@ THE RUN HELPER
 Many Bats tests need to run a command and then make assertions about
 its exit status and output. Bats includes a `run` helper that invokes
 its arguments as a command, saves the exit status and output into
-special global variables, and then returns with a `0` status code so
-you can continue to make assertions in your test case.
+special global variables, and (optionally) checks exit status against
+a given expected value. If successful, `run` returns with a `0` status
+code so you can continue to make assertions in your test case.
 
 For example, let's say you're testing that the `foo` command, when
 passed a nonexistent filename, exits with a `1` status code and prints
 an error message.
 
     @test "invoking foo with a nonexistent file prints an error" {
-      run foo nonexistent_filename
-      [ "$status" -eq 1 ]
+      run =1 foo nonexistent_filename
       [ "$output" = "foo: no such file 'nonexistent_filename'" ]
     }
+
+The `=1` as first argument tells `run` to expect 1 as an exit
+status, and to fail if the command exits with any other value.
+On failure, both actual and expected values will be displayed,
+along with the invoked command and its output:
+
+    # run$ foo nonexistent_filename
+    # foo: error initializing: /etc/foo.conf missing
+    # [ rc=127 (** EXPECTED 1 **) ]
+    #/vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    #| FAIL: exit code is 127; expected 1
+    #\^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This error indicates a possible problem with the installation or
+configuration of `foo`; note that a simple `[ $status != 0 ]`
+test would not have caught this kind of failure.
 
 The `$status` variable contains the status code of the command, and
 the `$output` variable contains the combined contents of the command's
@@ -57,8 +73,7 @@ that invoking `foo` without any arguments prints usage information on
 the first line:
 
     @test "invoking foo without arguments prints usage" {
-      run foo
-      [ "$status" -eq 1 ]
+      run =1 foo
       [ "${lines[0]}" = "usage: foo <filename>" ]
     }
 
@@ -86,16 +101,14 @@ test you wish to skip.
 
     @test "A test I don't want to execute for now" {
       skip
-      run foo
-      [ "$status" -eq 0 ]
+      run =0 foo
     }
 
 Optionally, you may include a reason for skipping:
 
     @test "A test I don't want to execute for now" {
       skip "This command will return zero soon, but not now"
-      run foo
-      [ "$status" -eq 0 ]
+      run =0 foo
     }
 
 Or you can skip conditionally:
@@ -105,8 +118,7 @@ Or you can skip conditionally:
         skip "foo isn't bar"
       fi
 
-      run foo
-      [ "$status" -eq 0 ]
+      run =0 foo
     }
 
 
