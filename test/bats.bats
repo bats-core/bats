@@ -131,6 +131,33 @@ fixtures bats
   [ "${lines[4]}" = "#   \`failing_helper' failed" ]
 }
 
+@test "failing bash condition logs correct line number" {
+  run bats "$FIXTURE_ROOT/failing_with_bash_cond.bats"
+  [ "$status" -eq 1 ]
+  [ "${#lines[@]}" -eq 4 ]
+  [ "${lines[1]}" = 'not ok 1 a failing test' ]
+  [ "${lines[2]}" = "# (in test file $RELATIVE_FIXTURE_ROOT/failing_with_bash_cond.bats, line 3)" ]
+  [ "${lines[3]}" = "#   \`[[ 1 == 2 ]]' failed" ]
+}
+
+@test "failing bash expression logs correct line number" {
+  run bats "$FIXTURE_ROOT/failing_with_bash_expression.bats"
+  [ "$status" -eq 1 ]
+  [ "${#lines[@]}" -eq 4 ]
+  [ "${lines[1]}" = 'not ok 1 a failing test' ]
+  [ "${lines[2]}" = "# (in test file $RELATIVE_FIXTURE_ROOT/failing_with_bash_expression.bats, line 3)" ]
+  [ "${lines[3]}" = "#   \`(( 1 == 2 ))' failed" ]
+}
+
+@test "failing negated command logs correct line number" {
+  run bats "$FIXTURE_ROOT/failing_with_negated_command.bats"
+  [ "$status" -eq 1 ]
+  [ "${#lines[@]}" -eq 4 ]
+  [ "${lines[1]}" = 'not ok 1 a failing test' ]
+  [ "${lines[2]}" = "# (in test file $RELATIVE_FIXTURE_ROOT/failing_with_negated_command.bats, line 3)" ]
+  [ "${lines[3]}" = "#   \`! true' failed" ]
+}
+
 @test "test environments are isolated" {
   run bats "$FIXTURE_ROOT/environment.bats"
   [ $status -eq 0 ]

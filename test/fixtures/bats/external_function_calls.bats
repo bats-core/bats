@@ -9,7 +9,7 @@ load test_helper
     help_me && false
 }
 
-@test "Call true function && return 1 stackdepth=2" {
+@test "Call true function && return 1 stackdepth=1" {
     help_me
     help_me && return 1
 }
@@ -24,7 +24,7 @@ load test_helper
     failing_helper || false
 }
 
-@test "Call false function && return 1 stackdepth=2" {
+@test "Call false function && return 1 stackdepth=1" {
     ! failing_helper
     failing_helper || return 1
 }
@@ -39,7 +39,7 @@ load test_helper
     return_0 && false
 }
 
-@test "Call return_0 function && return 1 stackdepth=2" {
+@test "Call return_0 function && return 1 stackdepth=1" {
     return_0
     return_0 && return 1
 }
@@ -54,7 +54,7 @@ load test_helper
     return_1 || false
 }
 
-@test "Call return_1 function && return 1 stackdepth=2" {
+@test "Call return_1 function && return 1 stackdepth=1" {
     ! return_1
     return_1 || return 1
 }

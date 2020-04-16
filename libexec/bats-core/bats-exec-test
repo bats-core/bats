@@ -50,7 +50,7 @@ source "$BATS_ROOT/lib/bats-core/test_functions.bash"
 source "$BATS_ROOT/lib/bats-core/tracing.bash"
 
 bats_teardown_trap() {
-  bats_error_trap
+  bats_check_status_from_trap
   local status=0
   # mark the start of this function to distinguish where skip is called
   # parameter 1 will signify the reason why this function was called
@@ -61,6 +61,7 @@ bats_teardown_trap() {
   if [[ $status -eq 0 ]]; then
     BATS_TEARDOWN_COMPLETED=1
   elif [[ -n "$BATS_TEST_COMPLETED" ]]; then
+    BATS_DEBUG_LAST_STACK_TRACE_IS_VALID=1
     BATS_ERROR_STATUS="$status"
   fi
 
@@ -96,12 +97,13 @@ bats_exit_trap() {
       # If instead the test fails, and the `teardown()` error happens while
       # `bats_teardown_trap` runs as the EXIT trap, the test will fail with no
       # output, since there's no way to reach the `bats_exit_trap` call.
-      BATS_STACK_TRACE=("${BATS_CURRENT_STACK_TRACE[@]}")
       BATS_ERROR_STATUS=1
     fi
     printf 'not ok %d %s\n' "$BATS_TEST_NUMBER" "${BATS_TEST_DESCRIPTION}${BATS_TEST_TIME}" >&3
-    bats_print_stack_trace "${BATS_STACK_TRACE[@]}" >&3
-    bats_print_failed_command "${BATS_STACK_TRACE[@]}" >&3
+    local stack_trace
+    bats_get_failure_stack_trace stack_trace
+    bats_print_stack_trace "${stack_trace[@]}" >&3
+    bats_print_failed_command "${stack_trace[@]}" >&3
 
     while IFS= read -r line; do
       printf '# %s\n' "$line"
@@ -130,15 +132,25 @@ bats_perform_test() {
     exit 1
   fi
 
-  # Some versions of Bash will reset BASH_LINENO to the first line of the
-  # function when the ERR trap fires. All versions of Bash appear to reset it
-  # on an unbound variable access error. bats_debug_trap will fire both before
-  # the offending line is executed, and when the error is triggered.
-  # Consequently, we use `BATS_CURRENT_STACK_TRACE` recorded by the
-  # first call to bats_debug_trap, _before_ the ERR trap or unbound variable
-  # access fires.
-  BATS_STACK_TRACE=()
-  BATS_CURRENT_STACK_TRACE=()
+  # Variables for capturing accurate stack traces. See bats_debug_trap for
+  # details.
+  #
+  # BATS_DEBUG_LAST_LINENO, BATS_DEBUG_LAST_SOURCE, and
+  # BATS_DEBUG_LAST_STACK_TRACE hold data from the most recent call to
+  # bats_debug_trap.
+  #
+  # BATS_DEBUG_LASTLAST_STACK_TRACE holds data from two bats_debug_trap calls
+  # ago.
+  #
+  # BATS_DEBUG_LAST_STACK_TRACE_IS_VALID indicates that
+  # BATS_DEBUG_LAST_STACK_TRACE contains the stack trace of the test's error. If
+  # unset, BATS_DEBUG_LAST_STACK_TRACE is unreliable and
+  # BATS_DEBUG_LASTLAST_STACK_TRACE should be used instead.
+  BATS_DEBUG_LASTLAST_STACK_TRACE=()
+  BATS_DEBUG_LAST_LINENO=()
+  BATS_DEBUG_LAST_SOURCE=()
+  BATS_DEBUG_LAST_STACK_TRACE=()
+  BATS_DEBUG_LAST_STACK_TRACE_IS_VALID=
 
   BATS_TEST_COMPLETED=
   BATS_TEST_SKIPPED=
