@@ -540,26 +540,30 @@ END_OF_ERR_MSG
   [ "$status" -eq 1 ]
 
   expectedNumberOfTests=12
-  linesOfOutputPerTest=3
-  [ "${#lines[@]}" -gt $((expectedNumberOfTests * linesOfOutputPerTest + 1)) ]
+  linesPerTest=5
 
   outputOffset=1
   currentErrorLine=9
-  linesPerTest=5
 
   for t in $(seq $expectedNumberOfTests); do
     [[ "${lines[$outputOffset]}" =~ "not ok $t " ]]
-    # Skip backtrace into external function if set
-    if [[ "${lines[$((outputOffset + 1))]}" =~ "# (from function " ]]; then
-      outputOffset=$((outputOffset + 1))
-      parenChar=" "
-    else
-      parenChar="("
-    fi
 
-    [ "${lines[$((outputOffset + 1))]}" = "# ${parenChar}in test file $RELATIVE_FIXTURE_ROOT/external_function_calls.bats, line $currentErrorLine)" ]
-    [[ "${lines[$((outputOffset + 2))]}" =~ " failed" ]]
-    outputOffset=$((outputOffset + 3))
+    [[ "${lines[$outputOffset]}" =~ stackdepth=([0-9]+) ]]
+    stackdepth="${BASH_REMATCH[1]}"
+    case "${stackdepth}" in
+      1)
+        [ "${lines[$((outputOffset + 1))]}" = "# (in test file $RELATIVE_FIXTURE_ROOT/external_function_calls.bats, line $currentErrorLine)" ]
+        outputOffset=$((outputOffset + 3))
+        ;;
+      2)
+        [[ "${lines[$((outputOffset + 1))]}" =~ ^'# (from function `'.*\'' in file '.*'/test_helper.bash, line '[0-9]+,$ ]]
+        [ "${lines[$((outputOffset + 2))]}" = "#  in test file $RELATIVE_FIXTURE_ROOT/external_function_calls.bats, line $currentErrorLine)" ]
+        outputOffset=$((outputOffset + 4))
+        ;;
+      *)
+        printf 'error: stackdepth=%s not implemented\n' "${stackdepth}" >&2
+        return 1
+    esac
     currentErrorLine=$((currentErrorLine + linesPerTest))
   done
 }
