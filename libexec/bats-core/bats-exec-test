@@ -101,7 +101,7 @@ bats_exit_trap() {
     fi
     printf 'not ok %d %s\n' "$BATS_TEST_NUMBER" "${BATS_TEST_DESCRIPTION}${BATS_TEST_TIME}" >&3
     bats_print_stack_trace "${BATS_STACK_TRACE[@]}" >&3
-    bats_print_failed_command >&3
+    bats_print_failed_command "${BATS_STACK_TRACE[@]}" >&3
 
     while IFS= read -r line; do
       printf '# %s\n' "$line"

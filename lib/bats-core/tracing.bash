@@ -58,7 +58,8 @@ bats_print_stack_trace() {
 }
 
 bats_print_failed_command() {
-	local frame="${BATS_STACK_TRACE[${#BATS_STACK_TRACE[@]} - 1]}"
+	local stack_trace=("${@}")
+	local frame="${stack_trace[${#stack_trace[@]} - 1]}"
 	local filename
 	local lineno
 	local failed_line
