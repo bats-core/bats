@@ -89,6 +89,21 @@ skip() {
   exit 0
 }
 
+md5match() {
+  string="$1"
+  expsum="$2"
+  if which md5sum >/dev/null 2>&1; then
+    cmd=`which md5sum`
+    sum=`"$cmd" <<< "$string" | cut -d' ' -f1`
+  else
+    which openssl >/dev/null 2>&1 || return 1 
+    cmd=`which openssl`
+    sum=`echo "$string" | "$cmd" md5 | cut -d' ' -f2`
+  fi
+  [ -z "$sum" ] && return 1
+  if [ "$sum" = "$expsum" ] ; then return 0 ; else return 1 ; fi
+}
+
 bats_test_begin() {
   BATS_TEST_DESCRIPTION="$1"
   if [[ -n "$BATS_EXTENDED_SYNTAX" ]]; then
