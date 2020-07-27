@@ -30,17 +30,18 @@ load() {
 }
 
 run() {
-  local origFlags="$-"
-  set +eET
-  local origIFS="$IFS"
   # 'output', 'status', 'lines' are global variables available to tests.
-  # shellcheck disable=SC2034
+  local line origFlags="$-"
+  set +eET
   output="$("$@" 2>&1)"
-  # shellcheck disable=SC2034
   status="$?"
-  # shellcheck disable=SC2034,SC2206
-  IFS=$'\n' lines=($output)
-  IFS="$origIFS"
+  lines=()
+  while IFS= read -r line; do
+    lines+=("$line")
+  done <<<"$output"
+  if [[ -n "$line" ]]; then # if there's any content after the last newline
+    lines+=("$line")
+  fi
   set "-$origFlags"
 }
 

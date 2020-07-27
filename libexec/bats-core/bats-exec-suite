@@ -65,7 +65,7 @@ for filename in "$@"; do
 
   test_names=()
   test_dupes=()
-  while read -r line; do
+  while IFS= read -r line; do
     if [[ ! "$line" =~ ^bats_test_function\  ]]; then
       continue
     fi
