@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+set -e
+
+header_pattern='[0-9]+\.\.[0-9]+'
+read -r header
+
+if [[ "$header" =~ $header_pattern ]]; then
+  index=0
+  name=
+else
+  # If the first line isn't a TAP plan, print it and pass the rest through
+  printf '%s is not a valid TAP input, exitting\n' "$header"
+  exit 1
+fi
+
+begin() {
+    buffer '<LAVA_SIGNAL_STARTTC %s>' "$name"
+    advance
+}
+
+end() {
+    buffer '<LAVA_SIGNAL_ENDTC %s>' "$name"
+    advance
+}
+
+pass() {
+  local measurement=${1#measurement:}
+  local units=${2#units:}
+
+  # It is valid to have a measurement without units, but not units without a measuremnt
+  if [[ "$measurement" != "" ]] && [[ "$units" != "" ]]; then
+    buffer '<LAVA_SIGNAL_TESTCASE TEST_CASE_ID=%s MEASUREMENT=%s UNITS=%s>' "$name" "$measurement" "$units"
+  elif [[ "$measurement" != "" ]]; then
+    buffer '<LAVA_SIGNAL_TESTCASE TEST_CASE_ID=%s MEASUREMENT=%s>' "$name" "$measurement"
+  else
+    buffer '<LAVA_SIGNAL_TESTCASE TEST_CASE_ID=%s result=pass>' "$name"
+  fi
+
+  advance
+}
+
+skip() {
+  buffer '<LAVA_SIGNAL_TESTCASE TEST_CASE_ID=%s result=skip>' "$name"
+  true
+}
+
+fail() {
+  buffer '<LAVA_SIGNAL_TESTCASE TEST_CASE_ID=%s result=fail>' "$name"
+  advance
+}
+
+log() {
+  buffer '   %s\n' "$1"
+}
+
+advance() {
+  buffer '\n'
+}
+
+_buffer=
+
+buffer() {
+  local content
+  # shellcheck disable=SC2059
+  printf -v content -- "$@"
+  _buffer+="$content"
+}
+
+flush() {
+  printf '%s' "$_buffer"
+  [[ -n "$BATS_REPORT_OUTPUT_PATH" ]] && printf '%s' "$_buffer" | tee "$BATS_REPORT_OUTPUT_PATH/report.tap" >/dev/null
+  _buffer=
+}
+
+finish() {
+  flush
+  printf '\n'
+}
+
+trap finish EXIT
+
+measurement_expr='measurement:([[:print:]]*)[[:space:]]units:([[:print:]]*)'
+
+while IFS= read -r line; do
+  case "$line" in
+  'begin'*)
+    ((++index))
+    name="${line#* $index }"
+    begin
+    flush
+    ;;
+  'ok '*)
+    skip_expr="ok $index (.*) # skip ?(([[:print:]]*))?"
+    if [[ "$line" =~ $skip_expr ]]; then
+      skip "${BASH_REMATCH[2]}"
+    else
+      if [[ "$line" =~ $measurement_expr ]]; then
+        pass "measurement:${BASH_REMATCH[1]}" "units:${BASH_REMATCH[2]}"
+      else
+        echo "Could not match output line to measurement regex: $line" >&2
+        exit 1
+      fi
+    fi
+    ;;
+  'not ok '*)
+    fail
+    ;;
+  'end'*)
+    end
+    flush
+    ;;
+  '# '*)
+    log "${line:2}"
+    ;;
+  'suite '*) ;;
+
+  esac
+done

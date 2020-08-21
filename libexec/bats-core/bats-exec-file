@@ -22,6 +22,9 @@ while [[ "$#" -ne 0 ]]; do
   -T)
     flags+=('-T')
     ;;
+  -M)
+    flags+=('-M')
+    ;;
   -x)
     flags+=('-x')
     extended_syntax=1

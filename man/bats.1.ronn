@@ -52,7 +52,7 @@ OPTIONS
   * `-f`, `--filter <regex>`:
     Filter test cases by names matching the regular expression
   * `-F`, `--formatter <type>`:
-    Switch between formatters: pretty (default), tap (default w/o term), junit
+    Switch between formatters: pretty (default), tap (default w/o term), junit, lava
   * `-h`, `--help`:
     Display this help message
   * `-j`, `--jobs <jobs>`:
@@ -71,6 +71,8 @@ OPTIONS
     Shorthand for "--formatter tap"
   * `-T`, `--timing`:
     Add timing information to tests
+  * `-M`, `--measurements`:
+    Add lava measurement results to tests
   * `-v`, `--version`:
     Display the version number
 

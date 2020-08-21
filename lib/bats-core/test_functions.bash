@@ -85,6 +85,14 @@ bats_test_begin() {
   setup
 }
 
+bats_test_end() {
+  BATS_TEST_DESCRIPTION="$1"
+
+  if [[ -n "$BATS_EXTENDED_SYNTAX" ]]; then
+    printf 'end %d %s\n' "$BATS_TEST_NUMBER" "$BATS_TEST_DESCRIPTION" >&3
+  fi
+}
+
 bats_test_function() {
   local test_name="$1"
   BATS_TEST_NAMES+=("$test_name")

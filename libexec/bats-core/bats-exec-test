@@ -6,6 +6,7 @@ BATS_COUNT_ONLY=''
 BATS_TEST_FILTER=''
 BATS_ENABLE_TIMING=''
 BATS_EXTENDED_SYNTAX=''
+BATS_ENABLE_LAVA_MEASUREMENTS=''
 
 while [[ "$#" -ne 0 ]]; do
   case "$1" in
@@ -21,6 +22,9 @@ while [[ "$#" -ne 0 ]]; do
   -T)
     BATS_ENABLE_TIMING='-T'
     BATS_PERFORM_TEST_CMD+=('-T')
+    ;;
+  -M)
+    BATS_ENABLE_LAVA_MEASUREMENTS='-M'
     ;;
   -x)
     # shellcheck disable=SC2034
@@ -85,6 +89,13 @@ bats_exit_trap() {
     BATS_TEST_TIME=" in "$((SECONDS - BATS_TEST_START_TIME))"sec"
   fi
 
+  BATS_LAVA_MEASUREMENTS=""
+  if [[ -z "${skipped}" && -n "$BATS_ENABLE_LAVA_MEASUREMENTS" ]]; then
+    BATS_LAVA_MEASUREMENTS=" measurement:$lava_measurement units:$lava_units"
+  fi
+
+  bats_test_end "$BATS_TEST_DESCRIPTION" >>"$BATS_OUT" 2>&1
+
   if [[ -z "$BATS_TEST_COMPLETED" || -z "$BATS_TEARDOWN_COMPLETED" ]]; then
     if [[ "$BATS_ERROR_STATUS" -eq 0 ]]; then
       # For some versions of bash, `$?` may not be set properly for some error
@@ -99,7 +110,7 @@ bats_exit_trap() {
       BATS_STACK_TRACE=("${BATS_CURRENT_STACK_TRACE[@]}")
       BATS_ERROR_STATUS=1
     fi
-    printf 'not ok %d %s\n' "$BATS_TEST_NUMBER" "${BATS_TEST_DESCRIPTION}${BATS_TEST_TIME}" >&3
+    printf 'not ok %d %s\n' "$BATS_TEST_NUMBER" "${BATS_TEST_DESCRIPTION}${BATS_TEST_TIME}${BATS_LAVA_MEASUREMENTS}" >&3
     bats_print_stack_trace "${BATS_STACK_TRACE[@]}" >&3
     bats_print_failed_command >&3
 
@@ -111,7 +122,7 @@ bats_exit_trap() {
     fi
     status=1
   else
-    printf 'ok %d %s%s\n' "$BATS_TEST_NUMBER" "${BATS_TEST_DESCRIPTION}${BATS_TEST_TIME}" \
+    printf 'ok %d %s%s\n' "$BATS_TEST_NUMBER" "${BATS_TEST_DESCRIPTION}${BATS_TEST_TIME}${BATS_LAVA_MEASUREMENTS}" \
       "$skipped" >&3
     status=0
   fi

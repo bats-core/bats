@@ -30,7 +30,7 @@ HELP_TEXT_HEADER
   -c, --count               Count test cases without running any tests
   -f, --filter <regex>      Only run tests that match the regular expression
   -F, --formatter <type>    Switch between formatters: pretty (default),
-                              tap (default w/o term), junit
+                              tap (default w/o term), junit, lava
   -h, --help                Display this help message
   -j, --jobs <jobs>         Number of parallel jobs (requires GNU parallel)
   --parallel-preserve-environment
@@ -42,6 +42,9 @@ HELP_TEXT_HEADER
   -r, --recursive           Include tests in subdirectories
   -t, --tap                 Shorthand for "--formatter tap"
   -T, --timing              Add timing information to tests
+                              (cannot be used with lava formatter)
+  -M, --measurements        Add lava measurement results to tests
+                              (default for lava formatter)
   -v, --version             Display the version number
 
   For more information, see https://github.com/bats-core/bats-core
@@ -128,10 +131,10 @@ while [[ "$#" -ne 0 ]]; do
     ;;
   -F | --formatter)
     shift
-    if [[ $1 =~ ^(pretty|junit|tap)$ ]]; then
+    if [[ $1 =~ ^(pretty|junit|tap|lava)$ ]]; then
       formatter="$1"
     else
-      printf "Unknown formatter '%s', valid options are pretty, junit, tap\n" "$1"
+      printf "Unknown formatter '%s', valid options are pretty, junit, tap, lava\n" "$1"
       exit 1
     fi
     ;;
@@ -155,6 +158,10 @@ while [[ "$#" -ne 0 ]]; do
   -T | --timing)
     flags+=('-T')
     formatter_flags+=('-T')
+    ;;
+  -M | --measurements)
+    flags+=('-M')
+    formatter_flags+=('-M')
     ;;
   --parallel-preserve-environment)
     flags+=("--parallel-preserve-environment")
@@ -192,6 +199,16 @@ fi
 if [[ "$formatter" == "junit" ]]; then
   flags+=('-T')
   formatter_flags+=('-T')
+fi
+
+if [[ "$formatter" == "lava" ]]; then
+  for flag in "${flags[@]}"; do
+    if [[ "$flag" == "-T" ]]; then
+      abort "-T cannot be used with lava formatter"
+    fi
+  done
+  # enable lava measurements
+  flags+=('-M')
 fi
 
 if [[ "${#arguments[@]}" -eq 0 ]]; then
