@@ -5,14 +5,14 @@ bats_capture_stack_trace() {
 	local funcname
 	local i
 
-	BATS_STACK_TRACE=()
+	BATS_DEBUG_LAST_STACK_TRACE=()
 
 	for ((i = 2; i != ${#FUNCNAME[@]}; ++i)); do
 		# Use BATS_TEST_SOURCE if necessary to work around Bash < 4.4 bug whereby
 		# calling an exported function erases the test file's BASH_SOURCE entry.
 		test_file="${BASH_SOURCE[$i]:-$BATS_TEST_SOURCE}"
 		funcname="${FUNCNAME[$i]}"
-		BATS_STACK_TRACE+=("${BASH_LINENO[$((i - 1))]} $funcname $test_file")
+		BATS_DEBUG_LAST_STACK_TRACE+=("${BASH_LINENO[$((i-1))]} $funcname $test_file")
 		if [[ "$test_file" == "$BATS_TEST_SOURCE" ]]; then
 			case "$funcname" in
 			"$BATS_TEST_NAME" | setup | teardown | setup_file | teardown_file)
@@ -21,6 +21,21 @@ bats_capture_stack_trace() {
 			esac
 		fi
 	done
+}
+
+bats_get_failure_stack_trace() {
+	local stack_trace_var
+	# See bats_debug_trap for details.
+	if [[ -n "${BATS_DEBUG_LAST_STACK_TRACE_IS_VALID}" ]]; then
+		stack_trace_var=BATS_DEBUG_LAST_STACK_TRACE
+	else
+		stack_trace_var=BATS_DEBUG_LASTLAST_STACK_TRACE
+	fi
+	eval "$(printf \
+		'%s=(${%s[@]+"${%s[@]}"})' \
+		"${1}" \
+		"${stack_trace_var}" \
+		"${stack_trace_var}")"
 }
 
 bats_print_stack_trace() {
@@ -58,7 +73,8 @@ bats_print_stack_trace() {
 }
 
 bats_print_failed_command() {
-	local frame="${BATS_STACK_TRACE[${#BATS_STACK_TRACE[@]} - 1]}"
+	local stack_trace=("${@}")
+	local frame="${stack_trace[${#stack_trace[@]} - 1]}"
 	local filename
 	local lineno
 	local failed_line
@@ -117,15 +133,61 @@ bats_trim_filename() {
 	printf -v "$2" '%s' "${1#$BATS_CWD/}"
 }
 
+# bats_debug_trap tracks the last line of code executed within a test. This is
+# necessary because $BASH_LINENO is often incorrect inside of ERR and EXIT
+# trap handlers.
+#
+# Below are tables describing different command failure scenarios and the
+# reliability of $BASH_LINENO within different the executed DEBUG, ERR, and EXIT
+# trap handlers. Naturally, the behaviors change between versions of Bash.
+#
+# Table rows should be read left to right. For example, on bash version
+# 4.0.44(2)-release, if a test executes `false` (or any other failing external
+# command), bash will do the following in order:
+# 1. Call the DEBUG trap handler (bats_debug_trap) with $BASH_LINENO referring
+#    to the source line containing the `false` command, then
+# 2. Call the DEBUG trap handler again, but with an incorrect $BASH_LINENO, then
+# 3. Call the ERR trap handler, but with a (possibly-different) incorrect
+#    $BASH_LINENO, then
+# 4. Call the DEBUG trap handler again, but with $BASH_LINENO set to 1, then
+# 5. Call the EXIT trap handler, with $BASH_LINENO set to 1.
+#
+# bash version 4.4.20(1)-release
+#  command     | first DEBUG | second DEBUG | ERR     | third DEBUG | EXIT
+# -------------+-------------+--------------+---------+-------------+--------
+#  false       | OK          | OK           | OK      | BAD[1]      | BAD[1]
+#  [[ 1 = 2 ]] | OK          | BAD[2]       | BAD[2]  | BAD[1]      | BAD[1]
+#  (( 1 = 2 )) | OK          | BAD[2]       | BAD[2]  | BAD[1]      | BAD[1]
+#  ! true      | OK          | ---          | BAD[4]  | ---         | BAD[1]
+#  $var_dne    | OK          | ---          | ---     | BAD[1]      | BAD[1]
+#  source /dne | OK          | ---          | ---     | BAD[1]      | BAD[1]
+#
+# bash version 4.0.44(2)-release
+#  command     | first DEBUG | second DEBUG | ERR     | third DEBUG | EXIT
+# -------------+-------------+--------------+---------+-------------+--------
+#  false       | OK          | BAD[3]       | BAD[3]  | BAD[1]      | BAD[1]
+#  [[ 1 = 2 ]] | OK          | ---          | BAD[3]  | ---         | BAD[1]
+#  (( 1 = 2 )) | OK          | ---          | BAD[3]  | ---         | BAD[1]
+#  ! true      | OK          | ---          | BAD[3]  | ---         | BAD[1]
+#  $var_dne    | OK          | ---          | ---     | BAD[1]      | BAD[1]
+#  source /dne | OK          | ---          | ---     | BAD[1]      | BAD[1]
+#
+# [1] The reported line number is always 1.
+# [2] The reported source location is that of the beginning of the function
+#     calling the command.
+# [3] The reported line is that of the last command executed in the DEBUG trap
+#     handler.
+# [4] The reported source location is that of the call to the function calling
+#     the command.
 bats_debug_trap() {
 	# don't update the trace within library functions or we get backtraces from inside traps
 	if [[ "$1" != $BATS_ROOT/lib/* && "$1" != $BATS_ROOT/libexec/* ]]; then
-		# The last entry in the stack trace is not useful when en error occured:
-		# It is either duplicated (kinda correct) or has wrong line number (Bash < 4.4)
-		# Therefore we capture the stacktrace but use it only after the next debug
-		# trap fired.
-		# Expansion is required for empty arrays which otherwise error
-		BATS_CURRENT_STACK_TRACE=("${BATS_STACK_TRACE[@]+"${BATS_STACK_TRACE[@]}"}")
+		BATS_DEBUG_LASTLAST_STACK_TRACE=(
+			${BATS_DEBUG_LAST_STACK_TRACE[@]+"${BATS_DEBUG_LAST_STACK_TRACE[@]}"}
+		)
+
+		BATS_DEBUG_LAST_LINENO=(${BASH_LINENO[@]+"${BASH_LINENO[@]}"})
+		BATS_DEBUG_LAST_SOURCE=(${BASH_SOURCE[@]+"${BASH_SOURCE[@]}"})
 		bats_capture_stack_trace
 	fi
 }
@@ -134,21 +196,33 @@ bats_debug_trap() {
 # command failure, but the `EXIT` trap will. Also, some command failures may not
 # set `$?` properly. See #72 and #81 for details.
 #
-# For this reason, we call `bats_error_trap` at the very beginning of
-# `bats_teardown_trap` (the `DEBUG` trap for the call will fix the stack trace)
-# and check the value of `$BATS_TEST_COMPLETED` before taking other actions.
-# We also adjust the exit status value if needed.
+# For this reason, we call `bats_check_status_from_trap` at the very beginning
+# of `bats_teardown_trap` and check the value of `$BATS_TEST_COMPLETED` before
+# taking other actions. We also adjust the exit status value if needed.
 #
 # See `bats_exit_trap` for an additional EXIT error handling case when `$?`
 # isn't set properly during `teardown()` errors.
-bats_error_trap() {
+bats_check_status_from_trap() {
 	local status="$?"
 	if [[ -z "$BATS_TEST_COMPLETED" ]]; then
 		BATS_ERROR_STATUS="${BATS_ERROR_STATUS:-$status}"
 		if [[ "$BATS_ERROR_STATUS" -eq 0 ]]; then
 			BATS_ERROR_STATUS=1
 		fi
-		BATS_STACK_TRACE=("${BATS_CURRENT_STACK_TRACE[@]}")
 		trap - DEBUG
 	fi
+}
+
+bats_error_trap() {
+  bats_check_status_from_trap
+
+  # If necessary, undo the most recent stack trace captured by bats_debug_trap.
+  # See bats_debug_trap for details.
+  if [[ "${BASH_LINENO[*]}" = "${BATS_DEBUG_LAST_LINENO[*]:-}"
+     && "${BASH_SOURCE[*]}" = "${BATS_DEBUG_LAST_SOURCE[*]:-}" ]]; then
+    BATS_DEBUG_LAST_STACK_TRACE=(
+      ${BATS_DEBUG_LASTLAST_STACK_TRACE[@]+"${BATS_DEBUG_LASTLAST_STACK_TRACE[@]}"}
+    )
+  fi
+  BATS_DEBUG_LAST_STACK_TRACE_IS_VALID=1
 }
