@@ -323,8 +323,8 @@ Since Bats executes test with `set -e`, it implicitly checks each command exit s
 and fails the test if the exit status is non-zero. In most cases, this is helpful as
 you don't need explicit exit status checks.
 
-Although, it makes it harder to write a test that asserts both the non-zero exit
-status and the output of the command. For such cases, Bats includes a `run` helper
+However, this makes it harder to write a test that asserts both the non-zero exit
+status and the output of the command. For these cases, Bats includes a `run` helper
 that invokes its arguments as a command, saves the exit status and output into
 special global variables, and then returns with a `0` status code so you can
 continue to make assertions in your test case.
@@ -364,7 +364,7 @@ being changed, these changes will not persist after `run` completes.
 #### When not to use `run`
 
 In general, `run` should only be used when you want to check the output
-of a command that returns non-zero exit status. In other cases, its use
+of a command that returns non-zero exit status. In other cases, `run`
 is redundant and results in less readable code (and sometimes even
 non-working code).
 
@@ -422,26 +422,28 @@ Note that the output is only shown if the test case fails.
 4. In case you need to make sure the command succeeded, and check its output
    (or assign it to a variable), it is better to not use `run`, since
 
-```bash
-run command args ...
-[ "$status" -eq 0 ]
-var="$output"
-```
+    ```bash
+    run command args ...
+    [ "$status" -eq 0 ]
+    var="$output"
+    ```
+    
+    is equivalent to
+    
+    ```bash
+    var=$(command args ...)
+    ```
 
-is equivalent to
+5. In case your code involves a pipe, using `run` results in non-working code.
 
-```bash
-var=$(command args ...)
-```
+    ```bash
+    run command args ... | jq -e '.limit == 42'
+    ```
 
-5. In case your code involves a pipe, using `run ` results in non-working code.
-
-```bash
-run cmd status "$id" | jq -e ".limit == 42"
-```
-
-In this example, `jq` receives no input, runs no filters, and always succeeds,
-so the test is not working.
+    In this example, `jq` receives no input (which is captured by `run`), 
+    executes no filters, and always succeeds, so the test does not work as 
+    expected.
+    
 
 ### `load`: Share common code
 
