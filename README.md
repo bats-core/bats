@@ -444,6 +444,20 @@ Note that the output is only shown if the test case fails.
     executes no filters, and always succeeds, so the test does not work as 
     expected.
     
+    Instead use a Bash subshell:
+    
+    ```bash
+    run bash -c "command args ... | jq -e '.limit == 42'"
+    ```
+
+    This subshell is a fresh Bash environment, and will only inherit variables 
+    and functions that are exported into it.
+    
+    ```bash
+    limit() { jq -e '.limit == 42'; }
+    export -f limit
+    run bash -c "command args ... | limit"
+    ```
 
 ### `load`: Share common code
 
