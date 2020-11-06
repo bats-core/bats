@@ -319,14 +319,19 @@ For sample test files, see [examples](/docs/examples).
 
 ### `run`: Test other commands
 
-Many Bats tests need to run a command and then make assertions about its exit
-status and output. Bats includes a `run` helper that invokes its arguments as a
-command, saves the exit status and output into special global variables, and
-then returns with a `0` status code so you can continue to make assertions in
-your test case.
+Since Bats executes test with `set -e`, it implicitly checks each command exit status,
+and fails the test if the exit status is non-zero. In most cases, this is helpful as
+you don't need explicit exit status checks.
 
-For example, let's say you're testing that the `foo` command, when passed a
-nonexistent filename, exits with a `1` status code and prints an error message.
+However, this makes it harder to write a test that asserts both the non-zero exit
+status and the output of the command. For these cases, Bats includes a `run` helper
+that invokes its arguments as a command, saves the exit status and output into
+special global variables, and then returns with a `0` status code so you can
+continue to make assertions in your test case.
+
+For example, let's say you are testing that the `foo` command, when passed a
+nonexistent filename, exits with a `1` status code and prints a particular
+error message.
 
 ```bash
 @test "invoking foo with a nonexistent file prints an error" {
@@ -358,10 +363,15 @@ being changed, these changes will not persist after `run` completes.
 
 #### When not to use `run`
 
-In some cases, using `run` is redundant and results in a longer and less readable code.
+In general, `run` should only be used when you want to check the output
+of a command that returns non-zero exit status. In other cases, `run`
+is redundant and results in less readable code (and sometimes even
+non-working code).
+
 Here are a few examples.
 
-1. In case you only need to check the command succeeded, it is better to not use run, since
+1. In case you only need to check the command succeeded, it is better to not use `run`,
+   since the following code
 
 ```bash
 run command args ...
@@ -375,9 +385,24 @@ is equivalent to
 command args ...
 ```
 
-since bats sets `set -e` for all tests.
+(because bats sets `set -e` for all tests).
 
-2. In case you want to hide the command output (which `run` does), use output redirection instead.
+2. Similarly, if you only need to check the command failed, it is better not to use `run`,
+   since the following code
+
+```bash
+run command args ...
+echo $output
+[ "status" -ne 0 ]
+```
+
+is equivalent to
+
+```bash
+! command args ...
+```
+
+3. In case you want to hide the command output (which `run` does), use output redirection instead.
 
 This
 
@@ -394,21 +419,45 @@ command ... >/dev/null
 
 Note that the output is only shown if the test case fails.
 
-3. In case you need to assign command output to a variable (and maybe check
-   the command exit status), it is better to not use run, since
+4. In case you need to make sure the command succeeded, and check its output
+   (or assign it to a variable), it is better to not use `run`, since
 
-```bash
-run command args ...
-[ "$status" -eq 0 ]
-var="$output"
-```
+    ```bash
+    run command args ...
+    [ "$status" -eq 0 ]
+    var="$output"
+    ```
+    
+    is equivalent to
+    
+    ```bash
+    var=$(command args ...)
+    ```
 
-is equivalent to
-```bash
-var=$(command args ...)
-```
+5. In case your code involves a pipe, using `run` results in non-working code.
 
+    ```bash
+    run command args ... | jq -e '.limit == 42'
+    ```
 
+    In this example, `jq` receives no input (which is captured by `run`), 
+    executes no filters, and always succeeds, so the test does not work as 
+    expected.
+    
+    Instead use a Bash subshell:
+    
+    ```bash
+    run bash -c "command args ... | jq -e '.limit == 42'"
+    ```
+
+    This subshell is a fresh Bash environment, and will only inherit variables 
+    and functions that are exported into it.
+    
+    ```bash
+    limit() { jq -e '.limit == 42'; }
+    export -f limit
+    run bash -c "command args ... | limit"
+    ```
 
 ### `load`: Share common code
 
