@@ -64,7 +64,7 @@ trap 'kill 0; exit 1' INT
 TESTS_LIST_FILE="${BATS_RUN_TMPDIR}/test_list_file.txt"
 # create file even if no tests are found so the `read` below won't fail
 touch "$TESTS_LIST_FILE"
-TESTS_LIST_FILE="$TESTS_LIST_FILE" filter="$filter" bats-gather-tests "$@"
+TESTS_LIST_FILE="$TESTS_LIST_FILE" BATS_TEST_FILTER="$filter" bats-gather-tests "$@"
 
 IFS=$'\n' read -d '' -ra all_tests <"$TESTS_LIST_FILE" || [[ $? -eq 1 ]]
 
