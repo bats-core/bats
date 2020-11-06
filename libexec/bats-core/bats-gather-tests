@@ -13,7 +13,8 @@ bats_test_function() {
   test_line="$(printf "%s" "$filename"; printf " %q" "$@")"
   printf "%s\n" "$test_line" >> "$TESTS_LIST_FILE"
   line="$*"
-  if [[ " ${test_names[*]} " == *" $line "* ]]; then
+  # dereferencing ${test_names[*]} fails on older bash versions when empty -> check before
+  if [[ ${#test_names[@]} -gt 0 && " ${test_names[*]} " == *" $line "* ]]; then
       test_dupes+=("$line")
   fi
   test_names+=("$line")
