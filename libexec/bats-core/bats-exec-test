@@ -107,7 +107,7 @@ bats_exit_trap() {
       printf '# %s\n' "$line" || break # avoid feedback loop when errors are redirected into BATS_OUT (see #353)
     done <"$BATS_OUT" >&3
     if [[ -n "$line" ]]; then
-      printf '# %s\n' "$line"
+      printf '# %s\n' "$line" >&3
     fi
     status=1
   else
