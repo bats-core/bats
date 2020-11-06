@@ -137,7 +137,7 @@ bats_perform_test() {
   export BATS_SUITE_TEST_NUMBER="$2"
   export BATS_TEST_NUMBER="$3"
 
-  if ! declare -F "$BATS_TEST_NAME" &>/dev/null; then
+  if ! declare -F "${BATS_TEST_NAME% *}" &>/dev/null; then
     printf "bats: unknown test name \`%s'\n" "$BATS_TEST_NAME" >&2
     exit 1
   fi
@@ -162,7 +162,7 @@ bats_perform_test() {
   trap 'bats_teardown_trap as-exit-trap' EXIT
 
   BATS_TEST_START_TIME=$(get_mills_since_epoch)
-  "$BATS_TEST_NAME" >>"$BATS_OUT" 2>&1
+  eval "$BATS_TEST_NAME" >>"$BATS_OUT" 2>&1
 
   BATS_TEST_COMPLETED=1
   trap 'bats_exit_trap' EXIT
