@@ -13,6 +13,18 @@ abort() {
 bats_test_function() {
   test_line="$(printf "%s" "$filename"; printf " %q" "$@")"
   printf "%s\n" "$test_line" >> "$TESTS_LIST_FILE"
+
+  while true; do
+    case "$1" in
+      "--description")
+        shift 2
+      ;;
+      *)
+        break
+      ;;
+    esac
+  done
+  
   line="$*"
   # dereferencing ${test_names[*]} fails on older bash versions when empty -> check before
   if [[ ${#test_names[@]} -gt 0 && " ${test_names[*]} " == *" $line "* ]]; then

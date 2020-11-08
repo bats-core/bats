@@ -685,9 +685,11 @@ END_OF_ERR_MSG
   run bats "$FIXTURE_ROOT/dynamic_test_registration.bats"
   echo "$output"
   [[ $status -eq 0 ]]
-  [[ "${lines[0]}" == "1..4" ]]
-  [[ "${lines[1]}" == "ok 1 Test 1" ]]
-  [[ "${lines[2]}" == "ok 2 Parametrized test 1" ]]
-  [[ "${lines[3]}" == "ok 3 Parametrized test 2" ]]
-  [[ "${lines[4]}" == "ok 4 normal test" ]]
+  [[ "${lines[0]}" == "1..6" ]]
+  [[ "${lines[1]}" == "ok 1 Some description" ]]
+  [[ "${lines[2]}" == "ok 2 dynamic_test_without_description" ]]
+  [[ "${lines[3]}" == "ok 3 parametrized_test 1" ]]
+  [[ "${lines[4]}" == "ok 4 parametrized_test 2" ]]
+  [[ "${lines[5]}" == "ok 5 normal test1" ]]
+  [[ "${lines[6]}" == "ok 6 normal test2" ]]
 }
