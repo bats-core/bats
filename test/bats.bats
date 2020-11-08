@@ -653,10 +653,10 @@ END_OF_ERR_MSG
   cat "$TEMPFILE"
 
   run grep "file1" "$TEMPFILE"
-  [[ ${#lines[@]} -eq 2 ]]
+  [[ ${#lines[@]} -eq 3 ]]
 
   run grep "file2" "$TEMPFILE"
-  [[ ${#lines[@]} -eq 3 ]]
+  [[ ${#lines[@]} -eq 4 ]]
 }
 
 @test "Don't hang on CTRL-C (issue #353)" {
@@ -679,4 +679,17 @@ END_OF_ERR_MSG
     || (kill -9 -- -$SUBPROCESS_PID; false)
     #   ^ kill the process for good when SIGINT failed,
     #     to avoid waiting endlessly for stuck children to finish
+}
+
+@test "dynamic test registration" {
+  run bats "$FIXTURE_ROOT/dynamic_test_registration.bats"
+  echo "$output"
+  [[ $status -eq 0 ]]
+  [[ "${lines[0]}" == "1..6" ]]
+  [[ "${lines[1]}" == "ok 1 Some description" ]]
+  [[ "${lines[2]}" == "ok 2 dynamic_test_without_description" ]]
+  [[ "${lines[3]}" == "ok 3 parametrized_test 1" ]]
+  [[ "${lines[4]}" == "ok 4 parametrized_test 2" ]]
+  [[ "${lines[5]}" == "ok 5 normal test1" ]]
+  [[ "${lines[6]}" == "ok 6 normal test2" ]]
 }

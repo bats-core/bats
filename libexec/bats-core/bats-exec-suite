@@ -62,35 +62,11 @@ trap 'kill 0; exit 1' INT
 
 # create a file that contains all (filtered) tests to run from all files
 TESTS_LIST_FILE="${BATS_RUN_TMPDIR}/test_list_file.txt"
+# create file even if no tests are found so the `read` below won't fail
+touch "$TESTS_LIST_FILE"
+TESTS_LIST_FILE="$TESTS_LIST_FILE" BATS_TEST_FILTER="$filter" bats-gather-tests "$@"
 
-all_tests=()
-for filename in "$@"; do
-  if [[ ! -f "$filename" ]]; then
-    abort "Test file \"${filename}\" does not exist"
-  fi
-
-  test_names=()
-  test_dupes=()
-  while read -r line; do
-    if [[ ! "$line" =~ ^bats_test_function\  ]]; then
-      continue
-    fi
-    line="${line%$'\r'}"
-    line="${line#* }"
-    test_line=$(printf "%s\t%s" "$filename" "$line")
-    all_tests+=("$test_line")
-    printf "%s\n" "$test_line" >>"$TESTS_LIST_FILE"
-    if [[ " ${test_names[*]} " == *" $line "* ]]; then
-      test_dupes+=("$line")
-      continue
-    fi
-    test_names+=("$line")
-  done < <(BATS_TEST_FILTER="$filter" bats-preprocess "$filename")
-
-  if [[ "${#test_dupes[@]}" -ne 0 ]]; then
-    abort "Duplicate test name(s) in file \"${filename}\": ${test_dupes[*]}"
-  fi
-done
+IFS=$'\n' read -d '' -ra all_tests <"$TESTS_LIST_FILE" || [[ $? -eq 1 ]]
 
 test_count="${#all_tests[@]}"
 

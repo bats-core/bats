@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -e
+
+# shellcheck source=lib/bats-core/test_functions.bash disable=SC2153
+source "$BATS_ROOT/lib/bats-core/test_functions.bash"
+
+abort() {
+  printf 'Error: %s\n' "$1" >&2
+  exit 1
+}
+
+# override test_functions.bash's version to use it for test registration
+bats_test_function() {
+  test_line="$(printf "%s" "$filename"; printf " %q" "$@")"
+  printf "%s\n" "$test_line" >> "$TESTS_LIST_FILE"
+
+  while true; do
+    case "$1" in
+      "--description")
+        shift 2
+      ;;
+      *)
+        break
+      ;;
+    esac
+  done
+  
+  line="$*"
+  # dereferencing ${test_names[*]} fails on older bash versions when empty -> check before
+  if [[ ${#test_names[@]} -gt 0 && " ${test_names[*]} " == *" $line "* ]]; then
+      test_dupes+=("$line")
+  fi
+  test_names+=("$line")
+}
+
+for filename in "$@"; do
+  if [[ ! -f "$filename" ]]; then
+    abort "Test file \"${filename}\" does not exist"
+  fi
+
+  test_names=()
+  test_dupes=()
+
+  # shellcheck disable=SC1090
+  BATS_TEST_DIRNAME="${filename%/*}" source <(BATS_TEST_FILTER="$BATS_TEST_FILTER" bats-preprocess "$filename")
+
+  if [[ "${#test_dupes[@]}" -ne 0 ]]; then
+    abort "Duplicate test name(s) in file \"${filename}\": ${test_dupes[*]}"
+  fi
+done

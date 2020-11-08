@@ -77,14 +77,6 @@ skip() {
   exit 0
 }
 
-bats_test_begin() {
-  BATS_TEST_DESCRIPTION="$1"
-  if [[ -n "$BATS_EXTENDED_SYNTAX" ]]; then
-    printf 'begin %d %s\n' "$BATS_SUITE_TEST_NUMBER" "$BATS_TEST_DESCRIPTION" >&3
-  fi
-  setup
-}
-
 bats_test_function() {
   local test_name="$1"
   BATS_TEST_NAMES+=("$test_name")

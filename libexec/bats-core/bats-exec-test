@@ -107,7 +107,7 @@ bats_exit_trap() {
       printf '# %s\n' "$line" || break # avoid feedback loop when errors are redirected into BATS_OUT (see #353)
     done <"$BATS_OUT" >&3
     if [[ -n "$line" ]]; then
-      printf '# %s\n' "$line"
+      printf '# %s\n' "$line" >&3
     fi
     status=1
   else
@@ -133,11 +133,26 @@ get_mills_since_epoch() {
 }
 
 bats_perform_test() {
+  local got_test_description=
+  while true; do
+    case "$1" in
+      "--description")
+        # use eval to resolve variable references in test names
+        BATS_TEST_DESCRIPTION="$(eval "printf '%s' \"$2\"")"
+        got_test_description=1
+        shift 2
+      ;;
+      *)
+        break
+      ;;
+    esac
+  done
   export BATS_TEST_NAME="$1"
-  export BATS_SUITE_TEST_NUMBER="$2"
-  export BATS_TEST_NUMBER="$3"
+  if [[ ! $got_test_description ]]; then
+    BATS_TEST_DESCRIPTION="$*"
+  fi
 
-  if ! declare -F "$BATS_TEST_NAME" &>/dev/null; then
+  if ! declare -F "${BATS_TEST_NAME% *}" &>/dev/null; then
     printf "bats: unknown test name \`%s'\n" "$BATS_TEST_NAME" >&2
     exit 1
   fi
@@ -161,8 +176,15 @@ bats_perform_test() {
   # mark this call as trap call
   trap 'bats_teardown_trap as-exit-trap' EXIT
 
+  if [[ -n "$BATS_EXTENDED_SYNTAX" ]]; then
+    printf 'begin %d %s\n' "$BATS_SUITE_TEST_NUMBER" "$BATS_TEST_DESCRIPTION" >&3
+  fi
+
   BATS_TEST_START_TIME=$(get_mills_since_epoch)
-  "$BATS_TEST_NAME" >>"$BATS_OUT" 2>&1
+  {
+    setup "$BATS_TEST_NAME" 
+    eval "$BATS_TEST_NAME"
+  } >>"$BATS_OUT" 2>&1
 
   BATS_TEST_COMPLETED=1
   trap 'bats_exit_trap' EXIT
@@ -174,6 +196,12 @@ source "$BATS_ROOT/lib/bats-core/preprocessing.bash"
 
 exec 3<&1
 
+BATS_TEST_COMMAND="$1"
+export BATS_SUITE_TEST_NUMBER="$2"
+export BATS_TEST_NUMBER="$3"
+
 # Run the given test.
 bats_evaluate_preprocessed_source
-bats_perform_test "$@"
+
+# use eval to parse (internally quoted!) test command into parameters
+eval "bats_perform_test $BATS_TEST_COMMAND"

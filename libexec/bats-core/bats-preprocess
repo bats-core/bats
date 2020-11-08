@@ -33,6 +33,7 @@ bats_encode_test_name() {
 
 test_file="$1"
 tests=()
+test_descriptions=()
 {
   while IFS= read -r line; do
     line="${line//$'\r'/}"
@@ -41,10 +42,12 @@ tests=()
       name="${name%[\'\"]}"
       body="${BASH_REMATCH[2]}"
       bats_encode_test_name "$name" 'encoded_name'
-      printf '%s() { bats_test_begin "%s"; %s\n' "${encoded_name:?}" "$name" "$body" || :
+      # ":;" is needed for empty {} after test
+      printf '%s() { :; %s\n' "${encoded_name:?}" "$body" || :
 
       if [[ -z "$BATS_TEST_FILTER" || "$name" =~ $BATS_TEST_FILTER ]]; then
         tests+=("$encoded_name")
+        test_descriptions+=("$name")
       fi
     else
       printf '%s\n' "$line"
@@ -52,6 +55,6 @@ tests=()
   done
 } <<<"$(<"$test_file")"$'\n'
 
-for test_name in "${tests[@]}"; do
-  printf 'bats_test_function %s\n' "$test_name"
+for i in $(seq 0 "$((${#tests[@]} - 1))"); do
+  printf 'bats_test_function --description %q %s\n' "${test_descriptions[$i]}" "${tests[$i]}"
 done
