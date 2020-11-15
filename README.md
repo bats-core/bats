@@ -344,7 +344,7 @@ If invoked with one of the following as the first argument, `run`
 will perform an implicit check on the exit status of the invoked command:
 
     =N  expect exit status N (0-255), fail if otherwise
-    '!' expect nonzero exit status (1-255), fail if command succeeds
+    !   expect nonzero exit status (1-255), fail if command succeeds
 
 We can then write the above more elegantly as:
 

@@ -29,10 +29,10 @@ load() {
   source "${file}"
 }
 
-#########
-#  die  #  Abort with helpful and visible message
-#########
-die() {
+###############
+#  _bats_die  #  Abort with helpful and visible message
+###############
+_bats_die() {
   printf "#/vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\n"  >&2
   printf "#| FAIL: %s\n" "$1"                                      >&2
   shift
@@ -52,8 +52,13 @@ run() {
   if [[ "$1" = '!' ]]; then
     expected_rc=-1
     shift
-  elif [[ "$1" =~ ^=([0-9]|[1-9][0-9]|[12][0-9][0-9])$ ]]; then
+  elif [[ ${1:0:1} = '=' ]]; then
     expected_rc=${1#=}
+    if [[ $expected_rc =~ [^0-9] ]]; then
+      _bats_die "Usage error: run: '=NNN' requires numeric NNN (got: $1)"
+    elif [[ $expected_rc -gt 255 ]]; then
+      _bats_die "Usage error: run: '=NNN': NNN must be <= 255 (got: $1)"
+    fi
     shift
   fi
 
@@ -97,10 +102,10 @@ run() {
   if [[ -n "$expected_rc" ]]; then
     if [[ "$expected_rc" = "-1" ]]; then
       if [[ "$status" -eq 0 ]]; then
-        die "exit code is $status; expected nonzero"
+        _bats_die "exit code is $status; expected nonzero"
       fi
     elif [ "$status" -ne "$expected_rc" ]; then
-      die "exit code is $status; expected $expected_rc"
+      _bats_die "exit code is $status; expected $expected_rc"
     fi
   fi
 }

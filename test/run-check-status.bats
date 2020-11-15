@@ -7,12 +7,17 @@ load test_helper
   run      true
   run =0   true
   run '!'  false
+  run !    false
   run =1   false
   run =3   exit 3
   run =5   exit 5
   run =111 exit 111
   run =255 exit 255
   run =127 /no/such/command
+
+  # No status checking: these should all succeed
+  run false
+  run ls /no/such/f1l3
 }
 
 # Negative assertions.
@@ -86,14 +91,25 @@ function _run_test() {
             "\| FAIL: exit code is 3; expected 2"
 }
 
+@test "run: input validation on '=NNN': invalid number" {
+  local -a commands=("run =4evah echo hi")
+  _run_test "Usage error: .* requires numeric NNN"
+}
+
+@test "run: input validation on '=NNN': invalid exit status" {
+  local -a commands=("run =256 echo hi")
+  _run_test "Usage error: .* NNN must be <= 255"
+}
+
+
 @test "run: success when expecting error" {
-  local -a commands=("run '!' true")
+  local -a commands=("run ! true")
   _run_test "# run> true" \
             "\| FAIL: exit code is 0; expected nonzero"
 }
 
 @test "run: multiple pass/fails" {
-  local -a commands=("run '!' false"
+  local -a commands=("run ! false"
                      "run =0 echo hi"
                      "run =127 /no/such/cmd"
                      "run =1 /etc")

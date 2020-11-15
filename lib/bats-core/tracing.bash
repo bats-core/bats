@@ -122,15 +122,15 @@ bats_debug_trap() {
 	# don't update the trace within library functions or we get backtraces from inside traps
 	local stack_trace_offset=
 	if [[ "$1" == $BATS_ROOT/lib/* || "$1" == $BATS_ROOT/libexec/* ]]; then
-        	if [[ "${FUNCNAME[1]}" != "run" ]]; then
+		if [[ "${FUNCNAME[1]}" != "run" ]]; then
 			return
-                fi
+		fi
 
-                # We are inside 'run', which can throw a test failure.
-                # Make sure we log the calling function (presumably in user's
-                # .bats file) so we can emit proper line numbers in messages.
-                stack_trace_offset=1
-        fi
+		# We are inside 'run', which can throw a test failure.
+		# Make sure we log the calling function (presumably in user's
+		# .bats file) so we can emit proper line numbers in messages.
+		stack_trace_offset=1
+	fi
 
 	# The last entry in the stack trace is not useful when en error occured:
 	# It is either duplicated (kinda correct) or has wrong line number (Bash < 4.4)
