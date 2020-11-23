@@ -452,10 +452,12 @@ and the value checked when using `--filter`.
 
 ### `load`: Share common code
 
-You may want to share common code across multiple test files. Bats includes a
-convenient `load` command for sourcing a Bash source file relative to the
-location of the current test file. For example, if you have a Bats test in
-`test/foo.bats`, the command
+You may want to share common code across multiple test files. Bats
+includes a convenient `load` command for sourcing a Bash source files
+relative to the current test file, from absolute paths and from
+`BATS_LIB_PATH`, a `PATH`-like colon-delimited variable.
+
+For example, if you have a Bats test in `test/foo.bats`, the command
 
 ```bash
 load test_helper.bash
@@ -464,17 +466,86 @@ load test_helper.bash
 will source the script `test/test_helper.bash` in your test file (limitations
 apply, see below). This can be useful for sharing functions to set up your
 environment or load fixtures. `load` delegates to Bash's `source` command after
-resolving relative paths.
+resolving paths.
+
+If `load` encounters errors - e.g. because the targeted source file
+errored - it will print a message with the failing library and Bats
+exits.
+
+To allow to use `load` in conditions `load_safe` has been added.
+`load_safe` prints a message and returns `1` if a source file cannot be
+loaded instead of exiting Bats.
+Aside from that `load_safe` acts exactly like `load`.
 
 As pointed out by @iatrou in <https://www.tldp.org/LDP/abs/html/declareref.html>,
 using the `declare` builtin restricts scope of a variable. Thus, since actual
 `source`-ing is performed in context of the `load` function, `declare`d symbols
 will _not_ be made available to callers of `load`.
 
+#### `load` argument resolution
+
+`load` supports the following arguments:
+- absolute paths
+- relative paths (to the current test file)
+- library names
+
+`load` tries to determine the `library load path` for an argument
+- a `library load path` is any of the following in order of precedence:
+
+- `argument.bash`
+- `argument` (and is a file)
+- `argument/load.bash`
+- `argument/load`
+- `argument` (and is a directory)
+
 > For backwards compatibility `load` first searches for a file ending in
 > `.bash` (e.g. `load test_helper` searches for `test_helper.bash` before
 > it looks for `test_helper`). This behaviour is deprecated and subject to
 > change, please use exact filenames instead.
+
+If `argument` is an absolute path `load` tries to determine the load
+path directly.
+
+If `argument` is a relative path or a name `load` looks for a matching
+path in the directory of the current test and in all members of
+`BATS_LIB_PATH`.
+
+For example if your `BATS_LIB_PATH` is set to
+`~/.bats/libs:/var/lib/bats-libs`, then `load test_helper` in
+`test/foo.bats` would look in the following paths:
+
+- `test/test_helper.bash`
+- `test/test_helper`
+- `test/test_helper/load.bash`
+- `test/test_helper/load`
+- `test/test_helper` (directory)
+- `~/.bats/libs/test_helper.bash`
+- `~/.bats/libs/test_helper`
+- `~/.bats/libs/test_helper/load.bash`
+- `~/.bats/libs/test_helper/load`
+- `~/.bats/libs/test_helper` (directory)
+- `/var/lib/bats/test_helper.bash`
+- `/var/lib/bats/test_helper`
+- `/var/lib/bats/test_helper/load.bash`
+- `/var/lib/bats/test_helper/load`
+- `/var/lib/bats/test_helper` (directory)
+
+If the found load path is a file it is sourced.
+If the found load path is a directory all files ending `.bash` inside of
+the directory are sourced in alphanumerical order.
+
+If `source` returns with an error on any of the source files `load`
+prints a message and Bats exits.
+
+__Note:__ `BATS_LIB_PATH` defaults to `$HOME/.bats/lib:/usr/lib/bats` if
+it is empty. This default will _not_ be appended if `BATS_LIB_PATH` is
+not empty. This is done to allow full control over which files may get
+used in test suites.
+
+__Note:__ As seen above `load.bash` is the entry point for libraries and
+meant to load more files from its directory or other libraries and
+should only be used when conditional setup is required - such as calling
+a different binary based on the architecture, OS or distribution.
 
 ### `skip`: Easily skip tests
 
