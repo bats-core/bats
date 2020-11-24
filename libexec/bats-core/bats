@@ -280,6 +280,15 @@ done
 # shellcheck source=lib/bats-core/validator.bash
 source "$BATS_ROOT/lib/bats-core/validator.bash"
 
+# Prompt to show in verbose results: distinguish between root and non
+if [ -z "$BATS_PS1" ]; then
+  BATS_PS1='run$ '
+  if [ "$(id -u)" = "0" ]; then
+    BATS_PS1='run# '
+  fi
+fi
+export BATS_PS1
+
 set -o pipefail execfail
 
 if [[ -n "$report_formatter" ]]; then
