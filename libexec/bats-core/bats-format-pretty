@@ -92,6 +92,12 @@ log() {
 }
 
 summary() {
+  if  [ "$failures" -eq 0 ] ; then
+    set_color 2 bold
+  else
+    set_color 1 bold
+  fi
+
   buffer '\n%d test' "$count"
   if [[ "$count" -ne 1 ]]; then
     buffer 's'
@@ -116,6 +122,7 @@ summary() {
   fi
 
   buffer '\n'
+  clear_color
 }
 
 buffer_with_truncation() {

@@ -31,11 +31,12 @@ nonexistent filename, exits with a `1` status code and prints an error message.
 }
 ```
 
-The `$status` variable contains the status code of the command, and the
+The `$status` variable contains the status code of the command, the
 `$output` variable contains the combined contents of the command's standard
-output and standard error streams.
+output and standard error streams, and the `${command[*]}` array contains the
+command and command arguments passed to `run` for execution.
 
-A third special variable, the `$lines` array, is available for easily accessing
+Another special variable, the `$lines` array, is available for easily accessing
 individual lines of output. For example, if you want to test that invoking `foo`
 without any arguments prints usage information on the first line:
 
@@ -107,7 +108,7 @@ var=$(command args ...)
 
 External tools (like `shellcheck`, `shfmt`, and various IDE's) may not support
 the standard `.bats` syntax.  Because of this, we provide a valid `bash`
-alterntative:
+alternative:
 
 ```bash
 function invoking_foo_without_arguments_prints_usage { #@test

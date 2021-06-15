@@ -796,3 +796,23 @@ EOF
   [ "$status" -eq 0 ]
   [[ "$output" != *"No such file or directory"* ]] || exit 1 # ensure failures are detected with old bash
 }
+
+@test "test content of 'command' variable" {
+  run bats -v
+  [[ "${command[*]}" == "bats -v" ]] && [[ "$output" == Bats* ]]
+}
+
+@test "test color in summary" {
+  # pick up some test (no matter which), and run in with color in summary
+  run bats --pretty --filter 'no arguments' "$BATS_TEST_FILENAME"
+  # Save results for analysis on failure
+  echo output content:
+  echo "$output" | od -c
+
+  # Now check for opening and closing escape sequences
+  # shellcheck disable=SC2086
+  echo $output | grep -q $'0 failures.\033\[0m'
+  # shellcheck disable=SC2086
+  echo $output | grep -q $'\033\[32;1m.1 test'
+}
+

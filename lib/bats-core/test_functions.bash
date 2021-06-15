@@ -33,11 +33,14 @@ run() {
   local origFlags="$-"
   set +eET
   local origIFS="$IFS"
-  # 'output', 'status', 'lines' are global variables available to tests.
+  # 'output', 'status', 'command' and 'lines'
+  # are global variables available to tests.
   # shellcheck disable=SC2034
   output="$("$@" 2>&1)"
   # shellcheck disable=SC2034
   status="$?"
+  # shellcheck disable=SC2034
+  command=("$@")
   # shellcheck disable=SC2034,SC2206
   IFS=$'\n' lines=($output)
   IFS="$origIFS"
