@@ -41,9 +41,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
-      - run: |
+      - name: Run test on OS ${{ matrix.os }}
+        shell: 'script -q -e -c "bash {0}"' # work around tty issues
+        env:
+          TERM: linux # fix tput for tty issue work around
+        run: |
           npm pack ./
-          npm install -g ./bats-$(npm view ./package.json version).tgz
+          sudo npm install -g ./bats-$(npm view ./package.json version).tgz
           bats test  
 
   windows:
@@ -104,9 +108,16 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
-      - run: |
+      - name: Install unbuffer via expect
+        run: brew install expect
+      - name: Run test on OS ${{ matrix.os }}
+        shell: 'unbuffer bash {0}' # work around tty issues
+        env:
+          TERM: linux # fix tput for tty issue work around
+        run: |
           npm pack ./
-          npm install -g ./bats-$(npm view ./package.json version).tgz
+          # somehow there is already an intalled bats version around
+          npm install --force -g ./bats-$(npm view ./package.json version).tgz
           bats test  
 
   bash-version:
