@@ -32,7 +32,20 @@ jobs:
         run: |
           bash --version
           bash -c "time ${{ matrix.env_vars }} bin/bats --formatter tap test"
-          
+
+  npm_on_linux:
+    strategy:
+      matrix:
+        os: ['ubuntu-20.04', 'ubuntu-18.04', 'ubuntu-16.04']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+      - run: |
+          npm pack ./
+          npm install -g ./bats-$(npm view ./package.json version).tgz
+          bats test  
+
   windows:
     strategy:
       matrix:
@@ -48,7 +61,20 @@ jobs:
         run: |
           bash --version
           bash -c "time ${{ matrix.env_vars }} bin/bats --formatter tap test"
-          
+
+  npm_on_windows:
+    strategy:
+      matrix:
+        os: ['windows-2019']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+      - run: |
+          npm pack ./
+          npm install -g ./bats-$(npm view ./package.json version).tgz
+          bats test        
+
   macos:
     strategy:
       matrix:
@@ -69,6 +95,19 @@ jobs:
         run: |
           bash --version
           bash -c "time ${{ matrix.env_vars }} bin/bats --formatter tap test"
+
+  npm_on_macos:
+    strategy:
+      matrix:
+        os: ['macos-10.15']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+      - run: |
+          npm pack ./
+          npm install -g ./bats-$(npm view ./package.json version).tgz
+          bats test  
 
   bash-version:
     strategy:
