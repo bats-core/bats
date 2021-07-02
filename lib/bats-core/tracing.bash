@@ -130,7 +130,7 @@ bats_trim_filename() {
 # The path must point to an existing/accessable directory, not a file!
 bats_normalize_windows_dir_path() { # <path>
 	if [[ $1 == ?:* ]]; then
-		NORMALIZED_INPUT="$(cd "$1"; pwd)"
+		NORMALIZED_INPUT="$(cd "$1" || exit 1; pwd)"
 	else
 		NORMALIZED_INPUT="$1"
 	fi
