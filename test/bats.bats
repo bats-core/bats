@@ -823,7 +823,7 @@ EOF
 
   SUBPROCESS_PID=$!
   
-  sleep 1 # wait for the background process to start on slow systems
+  sleep 2 # wait for the background process to start on slow systems
 
   # emulate CTRL-C by sending SIGINT to the whole process group
   kill -SIGINT -- -$SUBPROCESS_PID
@@ -856,7 +856,7 @@ EOF
 
   SUBPROCESS_PID=$!
   
-  sleep 1 # wait for the background process to start on slow systems
+  sleep 2 # wait for the background process to start on slow systems
 
   # emulate CTRL-C by sending SIGINT to the whole process group
   kill -SIGINT -- -$SUBPROCESS_PID
@@ -889,7 +889,7 @@ EOF
 
   SUBPROCESS_PID=$!
   
-  sleep 1 # wait for the background process to start on slow systems
+  sleep 2 # wait for the background process to start on slow systems
 
   # emulate CTRL-C by sending SIGINT to the whole process group
   kill -SIGINT -- -$SUBPROCESS_PID
