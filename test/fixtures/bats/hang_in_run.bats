@@ -1,3 +1,3 @@
 @test "test" {
-    run sleep 10
+    run sleep 30
 }

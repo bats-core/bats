@@ -1,5 +1,5 @@
 setup_file() {
-    sleep 10
+    sleep 30
 }
 
 @test "empty" {
