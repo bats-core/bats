@@ -244,7 +244,7 @@ which gives us the following test result:
 
 .. code-block:: console
 
-    $ LANG=C ./test/bats/bin/bats test/test.bats 
+    $ ./test/bats/bin/bats test/test.bats 
      ✗ can run our script
        (in test file test/test.bats, line 13)
          `run project.sh | grep Welcome' failed
