@@ -16,6 +16,8 @@ load() {
     file="${BATS_TEST_DIRNAME}/${file}.bash"
   elif [[ -f "${BATS_TEST_DIRNAME}/${file}" ]]; then
     file="${BATS_TEST_DIRNAME}/${file}"
+  elif [[ -f "${BATS_TEST_DIRNAME}/${file}.sh" ]]; then
+    file="${BATS_TEST_DIRNAME}/${file}.sh"
   fi
 
   if [[ ! -f "$file" ]] && ! type -P "$file" >/dev/null; then

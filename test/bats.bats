@@ -196,8 +196,13 @@ fixtures bats
   [ $status -eq 0 ]
 }
 
-@test "load sources relative scripts with filename extension" {
+@test "load sources relative scripts with .bash filename extension" {
   HELPER_NAME="test_helper.bash" run bats "$FIXTURE_ROOT/load.bats"
+  [ $status -eq 0 ]
+}
+
+@test "load sources relative scripts with .sh filename extension" {
+  HELPER_NAME="test_helper2.sh" run bats "$FIXTURE_ROOT/load.bats"
   [ $status -eq 0 ]
 }
 
