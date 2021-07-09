@@ -411,12 +411,12 @@ fixtures bats
   [ "${lines[3]}" = "ok 3 unquoted name" ]
 }
 
-@test 'ensure compatibility with unofficial Bash strict mode' {
+@test "ensure compatibility with unofficial Bash strict mode" {
   local expected='ok 1 unofficial Bash strict mode conditions met'
 
   # Run Bats under `set -u` to catch as many unset variable accesses as
   # possible.
-  run bash -u "${BATS_TEST_DIRNAME%/*}/bin/bats" \
+  run bash -u "$BATS_ROOT/bin/bats" \
     "$FIXTURE_ROOT/unofficial_bash_strict_mode.bats"
   if [[ "$status" -ne 0 || "${lines[1]}" != "$expected" ]]; then
     cat <<END_OF_ERR_MSG
