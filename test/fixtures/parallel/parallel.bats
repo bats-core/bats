@@ -1,5 +1,5 @@
 setup() {
-  load '../../../concurrent-coordination'
+  load '../../concurrent-coordination'
   echo "start $BATS_TEST_NAME $BATS_TEST_FILENAME" >> "$FILE_MARKER"
 }
 
