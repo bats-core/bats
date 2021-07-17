@@ -664,7 +664,7 @@ END_OF_ERR_MSG
 
 @test "Don't hang on CTRL-C (issue #353)" {
   load 'cocurrent-coordination'
-  SINGLE_USE_LATCH_DIR="${BATS_SUITE_TMPDIR}"
+  export SINGLE_USE_LATCH_DIR="${BATS_SUITE_TMPDIR}"
   # guarantee that background processes get their own process group -> pid=pgid
   set -m
   bats "$FIXTURE_ROOT/run_long_command.bats" & # don't block execution, or we cannot send signals

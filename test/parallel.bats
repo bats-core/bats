@@ -114,17 +114,21 @@ check_parallel_tests() { # <expected maximum parallelity>
 }
 
 @test "parallelity factor is met exactly" {
-  parallelity=5 # run the 10 tests in 2 batches with 5 test each
-  bats --jobs $parallelity "$FIXTURE_ROOT/parallel_factor.bats" & # run in background to avoid blocking
-  # give it some time to start the tests
-  sleep 2
+  load 'concurrent-coordination'
+  export SINGLE_USE_LATCH_DIR="${BATS_SUITE_TMPDIR}"
+
+  export PARALLELITY=5 # run the 10 tests in 2 batches with 5 test each
+  bats --jobs $PARALLELITY "$FIXTURE_ROOT/parallel_factor.bats" & # run in background to avoid blocking
+
+  single-use-latch::wait parallel_factor $PARALLELITY
+  
   # find how many semaphores are started in parallel; don't count grep itself
   run bash -c "ps -ef | grep bats-exec-test | grep parallel/parallel_factor.bats | grep -v grep"
   echo "$output"
   
   # This might fail spuriously if we got bad luck with the scheduler
   # and hit the transition between the first and second batch of tests.
-  [[ "${#lines[@]}" -eq $parallelity  ]]
+  [[ "${#lines[@]}" -eq $PARALLELITY  ]]
 }
 
 @test "parallel mode correctly forwards failure return code" {
