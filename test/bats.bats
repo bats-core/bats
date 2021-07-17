@@ -663,12 +663,14 @@ END_OF_ERR_MSG
 }
 
 @test "Don't hang on CTRL-C (issue #353)" {
+  load 'cocurrent-coordination'
+  SINGLE_USE_LATCH_DIR="${BATS_SUITE_TMPDIR}"
   # guarantee that background processes get their own process group -> pid=pgid
   set -m
   bats "$FIXTURE_ROOT/run_long_command.bats" & # don't block execution, or we cannot send signals
   SUBPROCESS_PID=$!
 
-  sleep 1 # wait for the background process to start on slow systems
+  single-use-latch::wait run_long_command 1
 
   # emulate CTRL-C by sending SIGINT to the whole process group
   kill -SIGINT -- -$SUBPROCESS_PID
