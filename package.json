@@ -11,7 +11,9 @@
     "bin",
     "libexec",
     "lib",
-    "man"
+    "man",
+    "install.sh",
+    "uninstall.sh"
   ],
   "directories": {
     "bin": "bin",

@@ -68,7 +68,7 @@ expand_path() {
   printf -v "$result" '%s/%s' "$dirname" "${path##*/}"
 }
 
-BATS_LIBEXEC="$(dirname "$(bats_readlinkf "${BASH_SOURCE[0]}")")"
+BATS_LIBEXEC="$(cd "$(dirname "$(bats_readlinkf "${BASH_SOURCE[0]}")")"; pwd)"
 export BATS_LIBEXEC
 export BATS_CWD="$PWD"
 export BATS_TEST_PATTERN="^[[:blank:]]*@test[[:blank:]]+(.*[^[:blank:]])[[:blank:]]+\{(.*)\$"

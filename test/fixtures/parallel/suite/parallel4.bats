@@ -1,1 +1,1 @@
-../parallel.bats
+parallel1.bats

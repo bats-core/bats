@@ -1,3 +1,8 @@
+setup() {
+    load '../../concurrent-coordination'
+}
+
 @test "test" {
-    run sleep 10
+    single-use-latch::signal hang_in_run
+    run sleep 30
 }
