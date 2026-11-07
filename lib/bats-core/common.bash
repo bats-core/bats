@@ -271,6 +271,13 @@ bats_format_file_line_reference_uri() {
   printf -v "$output" "file://%s:%d" "$filename" "$line"
 }
 
+bats_execute_internal() { # <internal-command> <args...>
+  local command=$1
+  shift
+  # Do not rely on an internal helper's `env bash` shebang after setup_suite changes PATH.
+  "$BATS_BASH" "$BATS_LIBEXEC/$command" "$@"
+}
+
 # execute command with backed up path
 # to prevent path mocks from interfering with our internals
 bats_execute() { # <command...>

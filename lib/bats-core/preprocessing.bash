@@ -9,7 +9,7 @@ bats_export_preprocess_source_BATS_TEST_SOURCE() {
 bats_preprocess_source() { # index
   bats_export_preprocess_source_BATS_TEST_SOURCE
   # shellcheck disable=SC2153
-  CHECK_BATS_COMMENT_COMMANDS=1 "$BATS_ROOT/libexec/bats-core/bats-preprocess" "$BATS_TEST_FILENAME" >"$BATS_TEST_SOURCE"
+  CHECK_BATS_COMMENT_COMMANDS=1 bats_execute_internal bats-preprocess "$BATS_TEST_FILENAME" >"$BATS_TEST_SOURCE"
 }
 
 bats_evaluate_preprocessed_source() {

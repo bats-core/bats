@@ -24,6 +24,7 @@ assert_variables_are_readonly() {
 
 @test "Bats-owned variables are readonly in setup_file" {
   assert_variables_are_readonly setup_file \
+    BATS_BASH \
     BATS_FILE_FIRST_TEST_NUMBER_IN_SUITE \
     BATS_TEST_FILENAME \
     BATS_TEST_FILE_NUMBER \
@@ -33,6 +34,7 @@ assert_variables_are_readonly() {
 
 @test "Bats-owned variables are readonly in test" {
   assert_variables_are_readonly test \
+    BATS_BASH \
     BATS_TEST_FILENAME \
     BATS_TEST_FILE_NUMBER \
     BATS_FILE_TMPDIR \

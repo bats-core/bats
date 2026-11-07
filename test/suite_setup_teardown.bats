@@ -64,6 +64,68 @@ setup() {
   EXPECTED_VALUE=exported_var reentrant_run -0 bats "$FIXTURE_ROOT/exported_vars/"
 }
 
+@test "Bats runtime variables are readonly in setup_suite" {
+  reentrant_run -0 env VARIABLES_TO_REASSIGN=BATS_BASH \
+    bats "$FIXTURE_ROOT/variables_readonly/"
+}
+
+@test "PATH mutations in setup_suite do not break Bats internals" {
+  reentrant_run -0 bats "$FIXTURE_ROOT/path_mutation/"
+  [ "${lines[0]}" = "1..1" ]
+  [ "${lines[1]}" = "ok 1 passing" ]
+  [ "${#lines[@]}" -eq 2 ]
+}
+
+@test "PATH mutations in setup_suite do not invoke Bash from PATH" {
+  local helper_dir="$BATS_TEST_TMPDIR/helpers"
+  mkdir "$helper_dir"
+  ln -s "$BATS_ROOT/libexec/bats-core/bats-exec-file" "$helper_dir/bats-exec-file"
+  printf '%s\n' '#!/bin/sh' 'exit 127' >"$helper_dir/bash"
+  chmod +x "$helper_dir/bash"
+
+  PATH_MUTATION_VALUE="$helper_dir:$BATS_SAVED_PATH" reentrant_run -0 bats "$FIXTURE_ROOT/path_mutation/"
+  [ "${lines[0]}" = "1..1" ]
+  [ "${lines[1]}" = "ok 1 passing" ]
+  [ "${#lines[@]}" -eq 2 ]
+}
+
+@test "parallel PATH mutations in setup_suite do not break Bats internals" {
+  local parallel_binary="${BATS_PARALLEL_BINARY_NAME:-parallel}"
+  local parallel_path
+  parallel_path="$(type -p "$parallel_binary")" || skip "--jobs requires $parallel_binary"
+
+  emulate_bats_env
+  local libexec_with_spaces="$BATS_TEST_TMPDIR/libexec with spaces"
+  mkdir -p "$libexec_with_spaces"
+  # Exercise GNU parallel command-template quoting for BATS_LIBEXEC paths with spaces.
+  for helper in "$BATS_ROOT"/libexec/bats-core/bats-*; do
+    ln -s "$helper" "$libexec_with_spaces/${helper##*/}"
+  done
+
+  local exec_file_marker="$BATS_TEST_TMPDIR/parallel-exec-file-ran"
+  export EXEC_FILE_MARKER="$exec_file_marker"
+  export REAL_EXEC_FILE="$BATS_ROOT/libexec/bats-core/bats-exec-file"
+  rm "$libexec_with_spaces/bats-exec-file"
+  # shellcheck disable=SC2016 # generated script variables expand when the wrapper runs
+  printf '%s\n' \
+    '#!/usr/bin/env bash' \
+    'printf "bats-exec-file\n" >>"$EXEC_FILE_MARKER"' \
+    'exec "$BATS_BASH" "$REAL_EXEC_FILE" "$@"' >"$libexec_with_spaces/bats-exec-file"
+  chmod +x "$libexec_with_spaces/bats-exec-file"
+
+  REENTRANT_RUN_PRESERVE+=(BATS_LIBEXEC)
+  BATS_LIBEXEC="$libexec_with_spaces" \
+    PATH_MUTATION_VALUE="$(dirname "$parallel_path"):/usr/bin:/bin" \
+    reentrant_run -0 bats-exec-suite -j 2 \
+      --setup-suite-file "$FIXTURE_ROOT/path_mutation/setup_suite.bash" \
+      "$FIXTURE_ROOT/path_mutation/test.bats"
+
+  [ "${lines[0]}" = "1..1" ]
+  [ "${lines[1]}" = "ok 1 passing" ]
+  [ "${#lines[@]}" -eq 2 ]
+  [ "$(wc -l <"$exec_file_marker")" -eq 1 ]
+}
+
 @test "syntax errors in setup_suite.bash are reported and lead to non zero exit code" {
   LANG=C reentrant_run ! bats --setup-suite-file "$FIXTURE_ROOT/syntax_error/setup_suite_no_shellcheck" "$FIXTURE_ROOT/syntax_error/"
   [[ "${lines[1]}" == "$FIXTURE_ROOT/syntax_error/setup_suite_no_shellcheck: line 2: syntax error: unexpected end of file"* ]]

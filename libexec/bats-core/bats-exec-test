@@ -59,8 +59,9 @@ elif [[ ! -f "$BATS_TEST_FILENAME" ]]; then
   exit 1
 fi
 
+export BATS_BASH="$BASH"
 # shellcheck disable=SC2034 # BATS_SUITE_TMPDIR is exposed to user code
-readonly BATS_TEST_FILENAME BATS_TEST_FILE_NUMBER BATS_FILE_TMPDIR BATS_SUITE_TMPDIR
+readonly BATS_BASH BATS_TEST_FILENAME BATS_TEST_FILE_NUMBER BATS_FILE_TMPDIR BATS_SUITE_TMPDIR
 
 bats_create_test_tmpdirs() {
   local tests_tmpdir="${BATS_RUN_TMPDIR}/test"
