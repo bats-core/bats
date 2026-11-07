@@ -7,6 +7,7 @@ nfilter=''
 num_jobs=${BATS_NUMBER_OF_PARALLEL_JOBS:-1}
 parallel_binary_name=${BATS_PARALLEL_BINARY_NAME:-"parallel"}
 BATS_ABORT_ON_FAILURE=
+bats_parallel_keep_order=
 bats_no_parallelize_across_files=${BATS_NO_PARALLELIZE_ACROSS_FILES-}
 bats_no_parallelize_within_files=
 filter_status=''
@@ -46,6 +47,9 @@ while [[ "$#" -ne 0 ]]; do
   --parallel-binary-name)
     shift
     parallel_binary_name="$1"
+    ;;
+  --parallel-ordered-output)
+    bats_parallel_keep_order=1
     ;;
   -T)
     flags+=('-T')
@@ -316,10 +320,14 @@ else
 fi
 
 if [[ "$num_jobs" -gt 1 ]] && [[ -z "$bats_no_parallelize_across_files" ]]; then
-  parallel_flags=(--keep-order --jobs "$num_jobs")
+  parallel_flags=(--jobs "$num_jobs")
   if (( BATS_ABORT_ON_FAILURE )); then
     parallel_flags+=('--halt' 'now,fail=1')
   fi
+  if [[ -n "$bats_parallel_keep_order" ]]; then
+    parallel_flags+=('--keep-order')
+  fi
+
   # run files in parallel to get the maximum pool of parallel tasks
   # shellcheck disable=SC2086,SC2068
   # we need to handle the quoting of ${flags[@]} ourselves,

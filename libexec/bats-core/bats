@@ -67,6 +67,8 @@ HELP_TEXT_HEADER
   -h, --help                Display this help message
   -j, --jobs <jobs>         Number of parallel jobs (requires GNU parallel or shenwei356/rush)
   --parallel-binary-name    Name of parallel binary
+  --parallel-ordered-output Preserve the output order of the tests, at the cost of reducing
+                            the user-interactiveness of the bats output.
   --no-tempdir-cleanup      Preserve test output temporary directory
   --errexit                 Enable errexit (set -e) for commands run in `run`
   --no-parallelize-across-files
@@ -242,6 +244,9 @@ while [[ "$#" -ne 0 ]]; do
   --parallel-binary-name)
     shift
     flags+=('--parallel-binary-name' "$1")
+    ;;
+  --parallel-ordered-output)
+    flags+=("--parallel-ordered-output")
     ;;
   -r | --recursive)
     recursive=1
