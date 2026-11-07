@@ -1,0 +1,3 @@
+@test "passing" {
+  true
+}

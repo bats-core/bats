@@ -21,6 +21,9 @@ else
   BATS_EMPTY_SUITE_STATUS=1
 fi
 
+export BATS_LIBEXEC
+readonly BATS_LIBEXEC
+
 abort() {
   printf 'Error: %s\n' "$1" >&2
   exit 1

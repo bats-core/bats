@@ -60,7 +60,7 @@ elif [[ ! -f "$BATS_TEST_FILENAME" ]]; then
 fi
 
 # shellcheck disable=SC2034 # BATS_SUITE_TMPDIR is exposed to user code
-readonly BATS_TEST_FILENAME BATS_TEST_FILE_NUMBER BATS_FILE_TMPDIR BATS_SUITE_TMPDIR
+readonly BATS_LIBEXEC BATS_TEST_FILENAME BATS_TEST_FILE_NUMBER BATS_FILE_TMPDIR BATS_SUITE_TMPDIR
 
 bats_create_test_tmpdirs() {
   local tests_tmpdir="${BATS_RUN_TMPDIR}/test"

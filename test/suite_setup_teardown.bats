@@ -64,6 +64,15 @@ setup() {
   EXPECTED_VALUE=exported_var reentrant_run -0 bats "$FIXTURE_ROOT/exported_vars/"
 }
 
+@test "BATS_LIBEXEC is readonly in setup_suite" {
+  reentrant_run -0 env VARIABLES_TO_REASSIGN=BATS_LIBEXEC \
+    bats "$FIXTURE_ROOT/variables_readonly/"
+}
+
+@test "setup_suite cannot redirect BATS_LIBEXEC" {
+  reentrant_run -0 bats "$FIXTURE_ROOT/libexec_mutation/"
+}
+
 @test "syntax errors in setup_suite.bash are reported and lead to non zero exit code" {
   LANG=C reentrant_run ! bats --setup-suite-file "$FIXTURE_ROOT/syntax_error/setup_suite_no_shellcheck" "$FIXTURE_ROOT/syntax_error/"
   [[ "${lines[1]}" == "$FIXTURE_ROOT/syntax_error/setup_suite_no_shellcheck: line 2: syntax error: unexpected end of file"* ]]

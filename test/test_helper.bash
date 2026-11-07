@@ -57,7 +57,7 @@ execute_with_unset_bats_vars() { # <command to execute...>
 
 REENTRANT_RUN_PRESERVE+=(BATS_SAVED_PATH BATS_ROOT BATS_TEST_TAGS BATS_PARALLEL_BINARY_NAME BATS_LIBDIR BATS_killer_pid)
 # readonly variables cannot be unset before a reentrant run
-REENTRANT_RUN_PRESERVE+=(BATS_TEST_FILENAME BATS_TEST_FILE_NUMBER BATS_FILE_TMPDIR BATS_SUITE_TMPDIR)
+REENTRANT_RUN_PRESERVE+=(BATS_LIBEXEC BATS_TEST_FILENAME BATS_TEST_FILE_NUMBER BATS_FILE_TMPDIR BATS_SUITE_TMPDIR)
 
 # call run with all BATS_* variables purged from the environment
 reentrant_run() { # <same args as run>
