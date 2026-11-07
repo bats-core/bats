@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog][kac] and this project adheres to
 
 ### Added
 
+* publish source release archives with SHA-256 checksums and GitHub artifact attestations (#1305)
 * `--` option terminator to allow test paths starting with `-` (#867, #1251)
 * `$BATS_ALLOW_EMPTY_SUITE` environment variable as an alternative to `--allow-empty-suite`, which keeps test setups compatible with Bats versions before 1.14 that don't know the flag (#1240)
 

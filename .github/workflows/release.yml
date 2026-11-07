@@ -8,6 +8,50 @@ permissions:
   contents: read
 
 jobs:
+  source-archive:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Build source archive
+        run: |
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.+-]+)?$ ]]; then
+            echo "Invalid release tag: $GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+          VERSION="${GITHUB_REF_NAME#v}"
+          ASSET_DIR="$RUNNER_TEMP/bats-release"
+          mkdir -p "$ASSET_DIR"
+          cd "$ASSET_DIR"
+          git -C "$GITHUB_WORKSPACE" archive --format=tar \
+            --prefix="bats-core-${VERSION}/" HEAD \
+            | gzip -n > "bats-core-${VERSION}.tar.gz"
+          sha256sum "bats-core-${VERSION}.tar.gz" \
+            > "bats-core-${VERSION}.tar.gz.sha256"
+      - name: Attest source archive and checksums
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: |
+            ${{ runner.temp }}/bats-release/*.tar.gz
+            ${{ runner.temp }}/bats-release/*.tar.gz.sha256
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          ASSET_DIR="$RUNNER_TEMP/bats-release"
+          ARCHIVE="$ASSET_DIR/bats-core-${VERSION}.tar.gz"
+          gh release upload "$GITHUB_REF_NAME" \
+            "$ARCHIVE" "${ARCHIVE}.sha256" \
+            --repo "$GITHUB_REPOSITORY"
+
   npmjs:
     runs-on: ubuntu-latest
     steps:
