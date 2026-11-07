@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog][kac] and this project adheres to
 
 ### Fixed
 
+* update pre-commit hook and replace unmaintained one (#1306)
 * avoid false duplicate errors for dynamic tests with argument prefixes, and
   detect duplicates with non-space `IFS` separators (#1249)
 * fix incorrect stack traces when `load` or `bats_load_library` fails (#1186, #1250)
