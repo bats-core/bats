@@ -35,7 +35,11 @@ update_count_column_width() {
 }
 
 update_screen_width() {
-  screen_width="$(tput cols)"
+  local columns
+  # tput fails when TERM is unset, empty or unknown: keep the previous width then
+  if columns="$(tput cols 2>/dev/null)"; then
+    screen_width=$columns
+  fi
   # also update dependent value
   update_count_column_left
 }

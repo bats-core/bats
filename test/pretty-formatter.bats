@@ -123,3 +123,15 @@ HERE
   [ "${lines[3]}" == '1 test, 0 failures, 1 timed out' ]
   [ "${lines[4]}" == $'\033[0m' ]
 }
+
+@test "pretty formatter works without a usable TERM" {
+  bats_require_minimum_version 1.5.0
+  local term
+  for term in '' no-such-terminal; do
+    reentrant_run -0 env TERM="$term" bats --pretty "$FIXTURE_ROOT/passing.bats"
+    [ "${lines[3]}" == '1 test, 0 failures' ]
+  done
+
+  reentrant_run -0 env -u TERM bats --pretty "$FIXTURE_ROOT/passing.bats"
+  [ "${lines[3]}" == '1 test, 0 failures' ]
+}

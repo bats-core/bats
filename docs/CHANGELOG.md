@@ -32,6 +32,8 @@ The format is based on [Keep a Changelog][kac] and this project adheres to
 * preserve semaphore wrapper exit status (#1271)
 * protect Bats-owned execution variables (#1269)
 * fix missing newlines in `$BATS_TMPDIR`-error handling checks at startup (#1194)
+* pretty formatter aborted with a `tput` error when `TERM` was unset, empty or
+  unknown (#819, #1294)
 
 ### Changed
 
