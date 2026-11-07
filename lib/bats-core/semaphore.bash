@@ -15,7 +15,7 @@ bats_semaphore_run() {
   local output_dir=$1
   shift
   local semaphore_slot
-  semaphore_slot=$(bats_semaphore_acquire_slot)
+  bats_semaphore_acquire_slot semaphore_slot
   bats_semaphore_release_wrapper "$output_dir" "$semaphore_slot" "$@" &
   printf "%d\n" "$!"
 }
@@ -40,17 +40,29 @@ bats_semaphore_release_wrapper() {
   return $status
 }
 
+# $1 - variable in which to store the acquired slot number
 # block until a semaphore slot becomes free
-# prints the number of the slot that it received
 bats_semaphore_acquire_slot() {
-  mkdir -p "$BATS_SEMAPHORE_DIR"
+  local output_var=$1
+  mkdir -p "$BATS_SEMAPHORE_DIR" || return
+
+  local restore_noclobber=
+  if [[ $- != *C* ]]; then
+    set -C
+    restore_noclobber=1
+  fi
+
   local slot
   while true; do
     for ((slot = 0; slot < BATS_SEMAPHORE_NUMBER_OF_SLOTS; ++slot)); do
       # Bash noclobber creates the file with O_CREAT|O_EXCL, so only one
-      # process can successfully claim a given slot.
-      if (set -C; : > "$BATS_SEMAPHORE_DIR/slot-$slot") 2>/dev/null; then
-        printf "%d\n" "$slot"
+      # process can successfully claim a given slot. Occupied slots are an
+      # expected failed-redirection case, so suppress their diagnostic.
+      if : 2>/dev/null > "$BATS_SEMAPHORE_DIR/slot-$slot"; then
+        if [[ -n $restore_noclobber ]]; then
+          set +C
+        fi
+        printf -v "$output_var" "%d" "$slot"
         return 0
       fi
     done

@@ -40,6 +40,39 @@ check_parallel_tests() { # <expected maximum parallelity>
   [[ $read_lines -eq $expected_number_of_lines ]]
 }
 
+@test "semaphore acquisition writes the slot to an output variable and preserves noclobber" {
+  # shellcheck source=lib/bats-core/semaphore.bash
+  source "$BATS_ROOT/$BATS_LIBDIR/bats-core/semaphore.bash"
+  BATS_SEMAPHORE_DIR="$BATS_TEST_TMPDIR/semaphore"
+  # shellcheck disable=SC2030
+  BATS_SEMAPHORE_NUMBER_OF_SLOTS=1
+
+  set +C
+  local semaphore_slot
+  bats_semaphore_acquire_slot semaphore_slot
+  [[ $semaphore_slot -eq 0 ]]
+  [[ $- != *C* ]]
+  bats_semaphore_release_slot "$semaphore_slot"
+
+  set -C
+  bats_semaphore_acquire_slot semaphore_slot
+  [[ $semaphore_slot -eq 0 ]]
+  [[ $- == *C* ]]
+  bats_semaphore_release_slot "$semaphore_slot"
+  set +C
+}
+
+@test "semaphore acquisition fails when its directory cannot be created" {
+  # shellcheck source=lib/bats-core/semaphore.bash
+  source "$BATS_ROOT/$BATS_LIBDIR/bats-core/semaphore.bash"
+  BATS_SEMAPHORE_DIR="$BATS_TEST_TMPDIR/not-a-directory"
+  # shellcheck disable=SC2030
+  BATS_SEMAPHORE_NUMBER_OF_SLOTS=1
+  touch "$BATS_SEMAPHORE_DIR"
+
+  run -1 bats_semaphore_acquire_slot semaphore_slot
+}
+
 @test "parallel test execution with --jobs" {
   # shellcheck disable=SC2031,SC2030
   export FILE_MARKER
