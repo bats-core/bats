@@ -8,10 +8,22 @@ LIBNAME="${1:-support}"
 LIVERSION="${2:-0.3.0}"
 BASEURL='https://github.com/bats-core'
 DESTDIR="${BATS_LIBS_DEST_DIR:-/usr/lib/bats}"
-TMPDIR=$(mktemp -d -t bats-libs-XXXXXX)
-USAGE="Please provide the bats libe name and version \nFor example: install_libs.sh support 2.0.0\n"
+BATS_LIBS_TMPDIR=
 
-trap 'test -d "${TMPDIR}" && rm -fr "${TMPDIR}"' EXIT ERR SIGINT SIGTERM
+cleanup() {
+    local status=${1:-$?}
+    trap - ERR EXIT INT TERM
+    test -z "${BATS_LIBS_TMPDIR}" || test ! -d "${BATS_LIBS_TMPDIR}" || rm -rf "${BATS_LIBS_TMPDIR}"
+    exit "$status"
+}
+
+trap 'cleanup $?' ERR EXIT
+trap 'cleanup 130' INT
+trap 'cleanup 143' TERM
+
+BATS_LIBS_TMPDIR=$(mktemp -d -t bats-libs-XXXXXX)
+TMPDIR=$BATS_LIBS_TMPDIR
+USAGE="Please provide the bats lib name and version \nFor example: install_libs.sh support 2.0.0\n"
 
 [[ $# -ne 2 ]] && { _log FATAL "$USAGE"; exit 1; }
 
