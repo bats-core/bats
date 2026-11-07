@@ -722,6 +722,15 @@ There are several global variables you can use to introspect on Bats tests:
   is `setup_file()`.
 - `$BATS_TEST_NUMBER` is the (1-based) index of the current test case in the test file.
 - `$BATS_SUITE_TEST_NUMBER` is the (1-based) index of the current test case in the test suite (over all files).
+- `$BATS_JOBSLOT` is the unique job slot number for a given test, an integer
+  between 1 and `$BATS_JOBSLOTS` inclusive. No two tests will ever run
+  concurrently with the same slot number.
+- `$BATS_JOBSLOTS` is the maximum number of concurrent test jobs. This is not
+  necessarily the same as the value of the `-j` option! When running with
+  `--no-parallelize-across-files` or `--no-parallelize-within-files`, this
+  will be the same as `-j`. When running without either option (default),
+  it will be `-j` _squared_ because Bats uses its own algorithm to
+  run same-file tests.
 - `$BATS_TEST_TAGS` the tags of the current test.
 - `$BATS_TMPDIR` is the base temporary directory used by bats to create its
    temporary files / directories.

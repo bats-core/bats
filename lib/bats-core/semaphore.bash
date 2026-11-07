@@ -26,7 +26,14 @@ bats_semaphore_run() {
 bats_semaphore_release_wrapper() {
   local output_dir="$1"
   local semaphore_name="$2"
-  shift 2 # all other parameters will be use for the command to execute
+  shift 2 # all other parameters will be used for the command to execute
+
+  # not to be confused with GNU parallel's PARALLEL_JOBSLOT
+  export BATS_JOBSLOT="$semaphore_name"
+  # if also running under GNU parallel, we can have n^2 slots.
+  if [[ -n "$PARALLEL_JOBSLOT" ]]; then
+    BATS_JOBSLOT=$(( (PARALLEL_JOBSLOT - 1) * BATS_SEMAPHORE_NUMBER_OF_SLOTS + semaphore_name ))
+  fi
 
   trap 'status=$?; bats_semaphore_release_slot "$semaphore_name"; exit "$status"' EXIT
 

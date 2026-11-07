@@ -219,3 +219,18 @@ check_parallel_tests() { # <expected maximum parallelity>
   (( SECONDS < 5 ))
   [ "${lines[1]}" = 'Invalid number of jobs: -3' ]
 }
+
+@test "BATS_JOBSLOTS and JOBSLOT" {
+  if [[ "${BATS_NUMBER_OF_PARALLEL_JOBS:-1}" -gt 1 ]]; then
+    if [[ -z "${BATS_NO_PARALLELIZE_ACROSS_FILES:-}" ]]; then
+      [ "$BATS_JOBSLOTS" -eq "$BATS_NUMBER_OF_PARALLEL_JOBS" ]
+    elif [[ -z "${BATS_NO_PARALLELIZE_WITHIN_FILES:-}" ]]; then
+      [ "$BATS_JOBSLOTS" -eq "$BATS_NUMBER_OF_PARALLEL_JOBS" ]
+    else
+      [ "$BATS_JOBSLOTS" -eq $((BATS_NUMBER_OF_PARALLEL_JOBS ** 2)) ]
+    fi
+    [ "$BATS_JOBSLOT" -le "$BATS_JOBSLOTS" ]
+  else
+    [ -z "$BATS_JOBSLOTS" ]
+  fi
+}

@@ -328,6 +328,10 @@ bats_run_tests() {
 
   if [[ "$num_jobs" != 1 && "${BATS_NO_PARALLELIZE_WITHIN_FILE-False}" == False ]]; then
     export BATS_SEMAPHORE_NUMBER_OF_SLOTS="$num_jobs"
+    export BATS_JOBSLOTS="$num_jobs"
+    if [[ -z "${bats_no_parallelize_across_files}" ]]; then
+      BATS_JOBSLOTS=$((BATS_JOBSLOTS ** 2))
+    fi
     bats_run_tests_in_parallel "$BATS_RUN_TMPDIR/parallel_output" || bats_exec_file_status=1
   else
     local test_number_in_suite=$BATS_FILE_FIRST_TEST_NUMBER_IN_SUITE \
