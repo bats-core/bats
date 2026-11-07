@@ -1793,9 +1793,9 @@ END_OF_ERR_MSG
 
   # this should deterministically stop after first test fails
 
-  [ "${lines[0]}" = '1..5' ]
+  [ "${lines[0]}" = '1..6' ]
   [ "${lines[1]}" = 'not ok 1 failing' ]
-  [ "${lines[4]}" = '# bats warning: Executed 1 instead of expected 5 tests' ]
+  [ "${lines[4]}" = '# bats warning: Executed 1 instead of expected 6 tests' ]
   [ ${#lines[*]} -eq 5 ]
 }
 
@@ -1818,9 +1818,9 @@ END_OF_ERR_MSG
 
   # Due to race conditions, we cannot say how many other tests will run exactly.
   # However, we expect that the third test file will not be run due to the low
-  # parallelization factor and that the third test in each individual file will never run
+  # parallelization factor and that the marker in the failing file will not run.
 
-  [ "${lines[0]}" = '1..5' ]
+  [ "${lines[0]}" = '1..6' ]
   [ "${lines[1]}" = 'not ok 1 failing' ] # the provoking test should always be printed!
 
   # we should not reach the test that creates this file
