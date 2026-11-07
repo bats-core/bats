@@ -42,6 +42,10 @@ empty)
   bats_test_function --description "long one" -- record_args ''
   bats_test_function --description "short one" -- record_args
   ;;
+trailing-space)
+  bats_test_function --description "trailing space" -- record_args "value "
+  bats_test_function --description "leading space" -- record_args " value"
+  ;;
 duplicate)
   bats_test_function --description "first" -- record_args --format plain
   bats_test_function --description "duplicate" -- record_args --format plain

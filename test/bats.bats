@@ -1647,6 +1647,18 @@ END_OF_ERR_MSG
   done
 }
 
+@test "dynamic test arguments keep leading and trailing spaces" {
+  local log="$BATS_TEST_TMPDIR/registration.log"
+  : >|"$log"
+  reentrant_run env REGISTRATION_CASE=trailing-space REGISTRATION_LOG="$log" \
+    bats "$FIXTURE_ROOT/dynamic_test_registration_prefix.bats"
+  [ "$status" -eq 0 ]
+  [ "${lines[0]}" == '1..2' ]
+  [ "${lines[1]}" == 'ok 1 trailing space' ]
+  [ "${lines[2]}" == 'ok 2 leading space' ]
+  [ "$(<"$log")" == $'1 <value >\n1 < value>' ]
+}
+
 @test "dynamic test registration still rejects identical identities" {
   local log="$BATS_TEST_TMPDIR/registration.log"
   reentrant_run env REGISTRATION_CASE=duplicate REGISTRATION_LOG="$log" \

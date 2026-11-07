@@ -112,7 +112,8 @@ bats_test_function() {
   test_names+=("$line")
 
   local args
-  printf -v args '%q ' "$@"
+  printf -v args ' %q' "$@"
+  args=${args:1}
   #echo "Adding test $line as '$BATS_TEST_FILENAME$args'" >&2
   printf "%s\t%s\n" "$BATS_TEST_FILENAME" "$args" >> "$TESTS_LIST_FILE"
 }
