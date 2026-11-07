@@ -134,6 +134,13 @@ setup() {
   [ "${lines[1]}" = "ok 1 a passing test" ]
 }
 
+@test "recursive Bats invocation works without inherited launcher state" {
+  unset -f bats_readlinkf
+  unset BATS_LIBEXEC
+  reentrant_run bats "$FIXTURE_ROOT/passing.bats"
+  [ "$status" -eq 0 ]
+}
+
 @test "summary passing tests" {
   reentrant_run filter_control_sequences bats -p "$FIXTURE_ROOT/passing.bats"
   echo "$output"
@@ -742,7 +749,11 @@ END_OF_ERR_MSG
   bats "$FIXTURE_ROOT/hang_in_test.bats" & # don't block execution, or we cannot send signals
   SUBPROCESS_PID=$!
 
-  single-use-latch::wait hang_in_test 1
+  if ! single-use-latch::wait hang_in_test 1 10; then
+    kill -9 -- -$SUBPROCESS_PID 2>/dev/null || true
+    wait "$SUBPROCESS_PID" 2>/dev/null || true
+    false
+  fi
 
   # emulate CTRL-C by sending SIGINT to the whole process group
   kill -SIGINT -- -$SUBPROCESS_PID
@@ -874,7 +885,7 @@ END_OF_ERR_MSG
 
   load 'concurrent-coordination'
   # shellcheck disable=SC2031,SC2030
-  export SINGLE_USE_LATCH_DIR="${BATS_SUITE_TMPDIR}"
+  export SINGLE_USE_LATCH_DIR="${BATS_TEST_TMPDIR}"
   # we cannot use run for a background task, so we have to store the output for later
   bats "$FIXTURE_ROOT/hang_in_test.bats" --tap >"$TEMPFILE" 2>&1 & # don't block execution, or we cannot send signals
 
@@ -921,7 +932,7 @@ END_OF_ERR_MSG
 
   load 'concurrent-coordination'
   # shellcheck disable=SC2031,SC2030
-  export SINGLE_USE_LATCH_DIR="${BATS_SUITE_TMPDIR}"
+  export SINGLE_USE_LATCH_DIR="${BATS_TEST_TMPDIR}"
   # we cannot use run for a background task, so we have to store the output for later
   bats "$FIXTURE_ROOT/hang_in_run.bats" --tap >"$TEMPFILE" 2>&1 & # don't block execution, or we cannot send signals
 
@@ -961,7 +972,7 @@ END_OF_ERR_MSG
 
   load 'concurrent-coordination'
   # shellcheck disable=SC2031,SC2030
-  export SINGLE_USE_LATCH_DIR="${BATS_SUITE_TMPDIR}"
+  export SINGLE_USE_LATCH_DIR="${BATS_TEST_TMPDIR}"
   # we cannot use run for a background task, so we have to store the output for later
   bats "$FIXTURE_ROOT/hang_after_run.bats" --tap >"$TEMPFILE" 2>&1 & # don't block execution, or we cannot send signals
 
@@ -999,7 +1010,7 @@ END_OF_ERR_MSG
 
   load 'concurrent-coordination'
   # shellcheck disable=SC2031,SC2030
-  export SINGLE_USE_LATCH_DIR="${BATS_SUITE_TMPDIR}"
+  export SINGLE_USE_LATCH_DIR="${BATS_TEST_TMPDIR}"
   # we cannot use run for a background task, so we have to store the output for later
   bats "$FIXTURE_ROOT/hang_in_teardown.bats" --tap >"$TEMPFILE" 2>&1 & # don't block execution, or we cannot send signals
 
@@ -1038,7 +1049,7 @@ END_OF_ERR_MSG
 
   load 'concurrent-coordination'
   # shellcheck disable=SC2031,SC2030
-  export SINGLE_USE_LATCH_DIR="${BATS_SUITE_TMPDIR}"
+  export SINGLE_USE_LATCH_DIR="${BATS_TEST_TMPDIR}"
   # we cannot use run for a background task, so we have to store the output for later
   bats "$FIXTURE_ROOT/hang_in_setup_file.bats" --tap >"$TEMPFILE" 2>&1 & # don't block execution, or we cannot send signals
 
@@ -1076,7 +1087,7 @@ END_OF_ERR_MSG
 
   load 'concurrent-coordination'
   # shellcheck disable=SC2031
-  export SINGLE_USE_LATCH_DIR="${BATS_SUITE_TMPDIR}"
+  export SINGLE_USE_LATCH_DIR="${BATS_TEST_TMPDIR}"
   # we cannot use run for a background task, so we have to store the output for later
   bats "$FIXTURE_ROOT/hang_in_teardown_file.bats" --tap >"$TEMPFILE" 2>&1 & # don't block execution, or we cannot send signals
 

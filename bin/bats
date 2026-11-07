@@ -86,5 +86,4 @@ fi
 # the Bash subprocesses that use it repeatedly.
 BATS_ROOT=$(cd -P -- "${BATS_PATH%/*/*}" && pwd -P)
 export BATS_ROOT
-export -f bats_readlinkf
 exec env BATS_ROOT="$BATS_ROOT" BATS_LIBDIR="${BATS_BASE_LIBDIR:-lib}" "$BATS_ROOT/libexec/bats-core/bats" "$@"

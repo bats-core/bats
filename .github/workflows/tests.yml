@@ -65,25 +65,28 @@ jobs:
     strategy:
       matrix:
         os: ['ubuntu-22.04', 'ubuntu-24.04', 'ubuntu-26.04']
-        env_vars:
-          - ''
+        configuration:
+          - env_vars: ''
+            bats_args: ''
           # allow for some parallelity without GNU parallel, since it is not installed by default
-          - 'BATS_NO_PARALLELIZE_ACROSS_FILES=1 BATS_NUMBER_OF_PARALLEL_JOBS=2'
-          - 'BATS_PARALLEL_BINARY_NAME=rush'
+          - env_vars: 'BATS_NO_PARALLELIZE_ACROSS_FILES=1 BATS_NUMBER_OF_PARALLEL_JOBS=2'
+            bats_args: ''
+          - env_vars: 'BATS_PARALLEL_BINARY_NAME=rush'
+            bats_args: '--jobs 2'
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install rush
         run: |
           curl -sSfL https://github.com/shenwei356/rush/releases/download/v0.10.0/rush_linux_amd64.tar.gz | sudo tar xzf - -C /usr/local/bin
-        if: contains(matrix.env_vars, 'rush')
+        if: contains(matrix.configuration.env_vars, 'rush')
       - name: Run test on OS ${{ matrix.os }}
         shell: 'script -q -e -c "bash {0}"' # work around tty issues
         env:
           TERM: linux # fix tput for tty issue work around
         run: |
           bash --version
-          bash -c "time ${{ matrix.env_vars }} bin/bats  --print-output-on-failure test"
+          bash -c "time ${{ matrix.configuration.env_vars }} bin/bats ${{ matrix.configuration.bats_args }} --print-output-on-failure test"
 
   unset_variables:
     runs-on: ubuntu-latest

@@ -117,8 +117,8 @@ expand_path() {
 }
 
 BATS_LIBEXEC="$(
-  cd "$(dirname "$(bats_readlinkf "${BASH_SOURCE[0]}")")"
-  pwd
+  cd -P "$(dirname "${BASH_SOURCE[0]}")"
+  pwd -P
 )"
 export BATS_LIBEXEC
 export BATS_CWD="$PWD"

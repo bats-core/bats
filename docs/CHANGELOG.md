@@ -32,15 +32,13 @@ The format is based on [Keep a Changelog][kac] and this project adheres to
 * preserve semaphore wrapper exit status (#1271)
 * protect Bats-owned execution variables (#1269)
 * fix missing newlines in `$BATS_TMPDIR`-error handling checks at startup (#1194)
-
-### Changed
-
-* use native Rush in tests on macOS runners, bump Rush version to 0.10.0 (#1260)
-* parallel: claim semaphore slots with noclobber(#1279)
+* fix: support nested Bats runs in parallel (#1267)
 
 ### Changed
 
 * claim parallel semaphore slots atomically (#1259)
+* use native Rush in tests on macOS runners, bump Rush version to 0.10.0 (#1260)
+* parallel: claim semaphore slots with noclobber(#1279)
 
 ### Documentation
 
