@@ -1395,8 +1395,11 @@ END_OF_ERR_MSG
   FDS_LOG=$(<"$LOG_FILE")
   echo "$FDS_LOG"
   [ $SECONDS -lt 10 ]
-  [[ $FDS_LOG == *'otherfunc fds after: (0 1 2)'* ]] || false
-  [[ $FDS_LOG == *'setup_file fds after: (0 1 2)'* ]] || false
+  # Cygwin uses inherited implementation FDs that cannot reliably be enumerated and closed via shell redirections.
+  if [[ $OSTYPE != cygwin* ]]; then
+    [[ $FDS_LOG == *'otherfunc fds after: (0 1 2)'* ]] || false
+    [[ $FDS_LOG == *'setup_file fds after: (0 1 2)'* ]] || false
+  fi
 }
 
 @test "Allow for prefixing tests' names with BATS_TEST_NAME_PREFIX" {
