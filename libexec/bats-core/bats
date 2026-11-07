@@ -121,6 +121,7 @@ BATS_LIBEXEC="$(
   pwd
 )"
 export BATS_LIBEXEC
+export BATS_ARGS="$@"
 export BATS_CWD="$PWD"
 export PATH="$BATS_LIBEXEC:$PATH"
 export BATS_ROOT_PID=$$
