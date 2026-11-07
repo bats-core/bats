@@ -5,4 +5,3 @@
   cd test
   echo "yey from test directory"
 }
-

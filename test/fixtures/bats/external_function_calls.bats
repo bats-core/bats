@@ -6,12 +6,13 @@ load test_helper
 
 @test "Call true function && false stackdepth=1" {
   help_me
+  # padding: keeps the failing statement on the 6-line grid (see test/bats.bats)
   help_me && false
 }
 
-
 @test "Call true function && return 1 stackdepth=1" {
   help_me
+  # padding: keeps the failing statement on the 6-line grid (see test/bats.bats)
   help_me && return 1
 }
 
@@ -39,15 +40,15 @@ load test_helper
   failing_helper
 }
 
-
 @test "Call return_0 function && false stackdepth=1" {
   return_0
+  # padding: keeps the failing statement on the 6-line grid (see test/bats.bats)
   return_0 && false
 }
 
-
 @test "Call return_0 function && return 1 stackdepth=1" {
   return_0
+  # padding: keeps the failing statement on the 6-line grid (see test/bats.bats)
   return_0 && return 1
 }
 

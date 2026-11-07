@@ -293,7 +293,7 @@ while [[ "$#" -ne 0 ]]; do
     # Convert relative path to absolute to handle tests that change directory
     # This ensures the path remains valid even if tests use 'cd'
     if [[ $output_dir != /* ]]; then
-        output_dir="$PWD/$output_dir"
+      output_dir="$PWD/$output_dir"
     fi
     if [ -d "$output_dir" ]; then
       if ! find "$output_dir" -mindepth 1 -exec false {} + 2>/dev/null; then
@@ -485,7 +485,7 @@ if [[ -n "$setup_suite_file" && ! -f "$setup_suite_file" ]]; then
 fi
 
 filenames=()
-for ((i=0; i < ${#arguments[@]}; ++i)); do
+for ((i = 0; i < ${#arguments[@]}; ++i)); do
   filename="${arguments[i]}"
   if [[ -z "$filename" ]]; then
     abort --no-print-usage "File path must not be empty! (Path number $((i + 1)))"
@@ -539,7 +539,7 @@ bats_tee() { # <output-file> <command...>
   shift
   exec 3<&1 # use FD3 to get around pipe
   tee >(cat >&3) | "$@" >"$output_file" || status=$?
-  if (( status != 0 )); then
+  if ((status != 0)); then
     printf "ERROR: command \`%s\` failed with status %d\n" "$*" "$status" >&2
   fi
   return $status

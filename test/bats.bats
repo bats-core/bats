@@ -646,7 +646,7 @@ END_OF_ERR_MSG
   linesPerTest=6
 
   outputOffset=1
-  currentErrorLine=9
+  currentErrorLine=10
 
   for t in $(seq $expectedNumberOfTests); do
     echo "t=$t outputOffset=$outputOffset currentErrorLine=$currentErrorLine"

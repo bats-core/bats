@@ -154,7 +154,7 @@ setup() {
   cp "$FIXTURE_ROOT/test_helper.bash" "$library_root/$BATS_TEST_NAME/load.bash"
 
   BATS_LIB_PATH="$(cygpath --windows "$library_root")" \
-    HELPER_NAME="$BATS_TEST_NAME" \
+  HELPER_NAME="$BATS_TEST_NAME" \
     reentrant_run -0 "$BATS_ROOT/bin/bats" "$FIXTURE_ROOT/bats_load_library.bats"
 }
 

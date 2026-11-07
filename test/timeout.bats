@@ -40,5 +40,5 @@ bats_require_minimum_version 1.5.0
   DURATION=10
   reentrant_run -0 env BATS_TEST_TIMEOUT=$DURATION bats -T "$FIXTURE_ROOT/issue1067.bats"
   echo Took $SECONDS seconds
-  (( SECONDS < DURATION ))
+  ((SECONDS < DURATION))
 }

@@ -55,7 +55,7 @@ HERE
   [[ "${lines[2]}" == *$'\x1b[2G\x1b[33;1m\x1b[1G ✗ test timing=1, timeout=1\x1b[32;22m [456 (timeout: 0s)]'* ]] || false
   [[ "${lines[4]}" == *'2 tests, 0 failures, 1 timed out in '*' seconds' ]] || false
 
-  run bats-format-pretty  --interactive <<HERE
+  run bats-format-pretty --interactive <<HERE
 1..1
 suite /test/path
 begin 1 test timing=0, timeout=1

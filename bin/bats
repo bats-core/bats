@@ -8,9 +8,8 @@ set -euo pipefail
 # these [[ ... ]] and (( ... )) do not cause syntax errors in POSIX shells,
 # though they can be parsed differently.
 if [ -z "${BASH_VERSION-}" ] ||
-    [[ -z "${BASH_VERSINFO-}" ]] ||
-    ((BASH_VERSINFO[0] < 3 || (BASH_VERSINFO[0] == 3 && BASH_VERSINFO[1] < 2)))
-then
+  [[ -z "${BASH_VERSINFO-}" ]] ||
+  ((BASH_VERSINFO[0] < 3 || (BASH_VERSINFO[0] == 3 && BASH_VERSINFO[1] < 2))); then
   printf 'bats: this program needs to be run by Bash >= 3.2\n' >&2
   exit 1
 fi
@@ -73,8 +72,7 @@ BATS_BASE_LIBDIR=lib # this will be patched with the true value in install.sh
 # A Windows process can supply BATS_LIB_PATH in Windows form. Normalize it
 # before Bats evaluates test code or splits BATS_LIB_PATH on colons.
 if [[ ${OSTYPE-} == cygwin || ${OSTYPE-} == msys ]] &&
-  command -v cygpath >/dev/null 2>&1
-then
+  command -v cygpath >/dev/null 2>&1; then
   if [[ -n ${BATS_LIB_PATH-} ]]; then
     BATS_LIB_PATH=$(cygpath --unix --path "$BATS_LIB_PATH")
     export BATS_LIB_PATH

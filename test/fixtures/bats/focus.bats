@@ -1,8 +1,8 @@
 @test "unfocused" {
-    false
+  false
 }
 
 # bats test_tags=bats:focus
 @test "focused" {
-    true
+  true
 }

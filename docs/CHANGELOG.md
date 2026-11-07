@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog][kac] and this project adheres to
 * preserve semaphore wrapper exit status (#1271)
 * protect Bats-owned execution variables (#1269)
 * fix missing newlines in `$BATS_TMPDIR`-error handling checks at startup (#1194)
+* use shfmt linter in CI (#1205, #1242, #1277, #1282)
 
 ### Changed
 

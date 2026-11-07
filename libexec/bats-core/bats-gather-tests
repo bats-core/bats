@@ -33,23 +33,22 @@ read_tags() {
 
 while [[ "$#" -ne 0 ]]; do
   case "$1" in
-    --dummy-flag)
-      ;;
-    --filter-tags)
-      shift
-      read_tags "$1"
-      ;;
-    --)
-      shift 1
-      break
-      ;;
-    *)
-      abort "Unknown flag %s in command:\nbats-gather-tests %s" "$1" "${args[*]}"
-      ;;
+  --dummy-flag)
+    ;;
+  --filter-tags)
+    shift
+    read_tags "$1"
+    ;;
+  --)
+    shift 1
+    break
+    ;;
+  *)
+    abort "Unknown flag %s in command:\nbats-gather-tests %s" "$1" "${args[*]}"
+    ;;
   esac
   shift 1
 done
-
 
 # shellcheck source=lib/bats-core/test_functions.bash disable=SC2153
 # required to provide e.g. `load` for free code (some users rely on this)
@@ -61,31 +60,31 @@ bats_test_function() {
   local -a tags=() current_tags=()
   local description=
 
-  while (( $# > 0 )); do
+  while (($# > 0)); do
     case "$1" in
-      --description)
-        description=$2
-        shift 2
+    --description)
+      description=$2
+      shift 2
       ;;
-      --tags)
-        if [[ "$2" != "" ]]; then # avoid unbound variable with set -u Bash 3
-          IFS=, read -ra current_tags <<<"$2" || true
-          tags+=("${current_tags[@]}")
-        fi
-        shift 2
+    --tags)
+      if [[ "$2" != "" ]]; then # avoid unbound variable with set -u Bash 3
+        IFS=, read -ra current_tags <<<"$2" || true
+        tags+=("${current_tags[@]}")
+      fi
+      shift 2
       ;;
-      --)
-        shift
-        break
+    --)
+      shift
+      break
       ;;
-      *)
-        printf "ERROR: unknown option %s for bats_test_function" "$1" >&2
-        exit 1
+    *)
+      printf "ERROR: unknown option %s for bats_test_function" "$1" >&2
+      exit 1
       ;;
     esac
   done
 
-  if (( ${#tags[@]} > 1 )); then # avoid unbound variable with set -u Bash 3
+  if ((${#tags[@]} > 1)); then # avoid unbound variable with set -u Bash 3
     bats_sort tags "${tags[@]}"
   fi
 
@@ -114,7 +113,7 @@ bats_test_function() {
   local args
   printf -v args '%q ' "$@"
   #echo "Adding test $line as '$BATS_TEST_FILENAME$args'" >&2
-  printf "%s\t%s\n" "$BATS_TEST_FILENAME" "$args" >> "$TESTS_LIST_FILE"
+  printf "%s\t%s\n" "$BATS_TEST_FILENAME" "$args" >>"$TESTS_LIST_FILE"
 }
 
 function should_skip_because_of_focus() {
@@ -127,7 +126,7 @@ function should_skip_because_of_focus() {
       focus_mode=1
       # ... -> remove previously found, unfocused tests
       included_tests=()
-      : >| "$TESTS_LIST_FILE"
+      : >|"$TESTS_LIST_FILE"
     fi
   elif [[ $focus_mode == 1 ]]; then
     # the current test is not focused but focus mode is enabled -> filter out
@@ -138,7 +137,7 @@ function should_skip_because_of_focus() {
 }
 
 function should_skip_because_of_filter_tags() {
-  if (( ${#filter_tags_list[@]} > 0 )); then
+  if ((${#filter_tags_list[@]} > 0)); then
     for filter_tags in "${filter_tags_list[@]}"; do
       # empty search tags only match empty test tags!
       if [[ -z "$filter_tags" ]]; then
@@ -169,27 +168,27 @@ function should_skip_because_of_filter_tags() {
 }
 
 if [[ -n "${filter-}" ]]; then
-function should_skip_because_of_filter() {
-  # shellcheck disable=SC2154 # filter should be inherited as env var
-  ! [[ "$description" =~ $filter ]]
-}
+  function should_skip_because_of_filter() {
+    # shellcheck disable=SC2154 # filter should be inherited as env var
+    ! [[ "$description" =~ $filter ]]
+  }
 else
-function should_skip_because_of_filter() {
-  # skip this when there is no $filter
-  return 1
-}
+  function should_skip_because_of_filter() {
+    # skip this when there is no $filter
+    return 1
+  }
 fi
 
 if [[ -n "${nfilter-}" ]]; then
-function should_skip_because_of_negative_filter() {
-  # shellcheck disable=SC2154 # nfilter should be inherited as env var
-  [[ "$description" =~ $nfilter ]]
-}
+  function should_skip_because_of_negative_filter() {
+    # shellcheck disable=SC2154 # nfilter should be inherited as env var
+    [[ "$description" =~ $nfilter ]]
+  }
 else
-function should_skip_because_of_negative_filter() {
-  # skip this when there is no $nfilter
-  return 1
-}
+  function should_skip_because_of_negative_filter() {
+    # skip this when there is no $nfilter
+    return 1
+  }
 fi
 
 function should_skip_because_of_status() {
@@ -272,7 +271,7 @@ if [[ -n "${filter_status-}" ]]; then
       #echo "excluded"
       excluded_tests+=("$line")
       return 0
-    }  >&2
+    } >&2
   else
     printf "No recording of previous runs found. Running all tests!\n" >&2
   fi
@@ -289,10 +288,10 @@ touch "$BATS_OUT"
 bats_gather_tests_exit_trap() {
   local bats_gather_tests_exit_status=$?
   trap - ERR EXIT DEBUG
-  if (( bats_gather_tests_exit_status != 0)); then
+  if ((bats_gather_tests_exit_status != 0)); then
     printf "1..1\nnot ok 1 bats-gather-tests\n"
     # play back traces from test file evaluation
-    bats_replace_filename < "$BATS_TRACE"
+    bats_replace_filename <"$BATS_TRACE"
     bats_replace_filename <"$BATS_OUT" | bats_prefix_lines_for_tap_output
   fi >&2
   exit "$bats_gather_tests_exit_status"
@@ -307,7 +306,7 @@ touch "$BATS_TRACE"
 bats_gather_tests_source_exit_trap() {
   local bats_gather_tests_source_exit_status=$?
   trap - ERR EXIT DEBUG
-  if (( bats_gather_tests_source_exit_status != 0)); then
+  if ((bats_gather_tests_source_exit_status != 0)); then
     bats_get_failure_stack_trace stack_trace
     # shellcheck disable=SC2154
     bats_print_stack_trace "${stack_trace[@]}"
@@ -315,7 +314,7 @@ bats_gather_tests_source_exit_trap() {
     # shellcheck disable=SC2154,SC2034
     BATS_ERROR_STATUS=$bats_gather_tests_source_exit_status
     bats_print_failed_command "${stack_trace[@]}"
-  fi  >>"$BATS_TRACE"
+  fi >>"$BATS_TRACE"
   exit "$bats_gather_tests_source_exit_status"
 }
 
@@ -341,7 +340,6 @@ bats_gather_tests_for_file() {
     done >>"$BATS_RUNLOG_FILE"
   fi
 
-
   printf "file_test_count=%d\n" "${#test_names[@]}"
   printf "file_included_test_count=%d\n" "${#included_tests[@]}"
   printf "focus_mode=%d\n" "$focus_mode"
@@ -353,7 +351,7 @@ total_included_test_count=0
 export BATS_TEST_FILE_NUMBER=0
 
 for filename in "$@"; do
-  (( ++BATS_TEST_FILE_NUMBER ))
+  ((++BATS_TEST_FILE_NUMBER))
   if [[ ! -f "$filename" ]]; then
     abort 'Test file "%s" does not exist.\n' "${filename}"
   fi
@@ -371,14 +369,20 @@ for filename in "$@"; do
   saved_focus_mode=$focus_mode
 
   # get new values for the variables above
-  if [[ $BASH_VERSION == 4.3.*  ]]; then
+  if [[ $BASH_VERSION == 4.3.* ]]; then
     # Bash 4.3 has function scoping issues when this is run in $() -> work around via file
     bats_gather_tests_var_transfer_file=$BATS_RUN_TMPDIR/gather-tests-var-transfer
-    (set -eET; bats_gather_tests_for_file >"$bats_gather_tests_var_transfer_file")
+    (
+      set -eET
+      bats_gather_tests_for_file >"$bats_gather_tests_var_transfer_file"
+    )
     result=$(<"$bats_gather_tests_var_transfer_file")
   else
     # separate retrieval from eval to avoid hiding the exit code
-    result="$(set -eET; bats_gather_tests_for_file)"
+    result="$(
+      set -eET
+      bats_gather_tests_for_file
+    )"
   fi
 
   eval "$result"
@@ -391,7 +395,7 @@ for filename in "$@"; do
   total_test_count=$((total_test_count + file_test_count))
 
   # did focus mode turn on in this file? (cannot turn off afterwards)
-  if (( saved_focus_mode != focus_mode)); then # -> only count new tests
+  if ((saved_focus_mode != focus_mode)); then # -> only count new tests
     total_included_test_count=$file_included_test_count
   else # -> count previous tests as well
     total_included_test_count=$((total_included_test_count + file_included_test_count))
@@ -399,12 +403,12 @@ for filename in "$@"; do
 done
 
 if [[ -n "$filter_status" ]]; then
-  if (( total_test_count == 0 && total_included_test_count == 0 )); then
+  if ((total_test_count == 0 && total_included_test_count == 0)); then
     printf "There were no tests of status '%s' in the last recorded run.\n" "$filter_status" >&2
   fi
 fi
 
 # communicate to the caller that we are running in focus mode
-if (( focus_mode )); then
+if ((focus_mode)); then
   printf "focus_mode\n"
 fi

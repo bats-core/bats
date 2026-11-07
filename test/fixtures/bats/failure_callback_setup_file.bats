@@ -1,11 +1,11 @@
 bats::on_failure() {
-    echo "failure callback"
+  echo "failure callback"
 }
 
 setup_file() {
-    false
+  false
 }
 
 @test dummy {
-    true
+  true
 }

@@ -99,7 +99,7 @@ xml_escape() { # <string to escape>
   local CONTROL_CHAR=$'\033'
   local REGEX="$CONTROL_CHAR\[[0-9;]*[a-zA-Z]"
   while [[ "$output" =~ $REGEX ]]; do
-      output=${output//${BASH_REMATCH[0]}/}
+    output=${output//${BASH_REMATCH[0]}/}
   done
   printf "%s" "$output"
 }
@@ -250,21 +250,21 @@ bats_tap_stream_unknown() { # <full line>
 
 main() {
   local _buffer_log="" \
-        name="" \
-        class="JUNIT_FORMATTER_NO_FILE_ENCOUNTERED" \
-        _buffer="" \
-        _buffer_log="" \
-        _suite_buffer="" \
-        _system_out_log="" \
-        test_result_state="" \
-        test_skip_message=""
+    name="" \
+    class="JUNIT_FORMATTER_NO_FILE_ENCOUNTERED" \
+    _buffer="" \
+    _buffer_log="" \
+    _suite_buffer="" \
+    _system_out_log="" \
+    test_result_state="" \
+    test_skip_message=""
 
   local -i file_count=0 \
-            file_failures=0 \
-            file_skipped=0 \
-            file_exec_time=0 \
-            test_exec_time=0 \
-            suite_test_exec_time=0 
+    file_failures=0 \
+    file_skipped=0 \
+    file_exec_time=0 \
+    test_exec_time=0 \
+    suite_test_exec_time=0
 
   local BASE_PATH=.
 

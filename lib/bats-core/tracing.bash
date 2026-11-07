@@ -5,7 +5,7 @@ source "$BATS_ROOT/$BATS_LIBDIR/bats-core/common.bash"
 
 # set limit such that traces are only captured for calls at the same depth as this function in the calltree
 bats_set_stacktrace_limit() {
-  BATS_STACK_TRACE_LIMIT=$(( ${#FUNCNAME[@]} - 1 )) # adjust by -1 to account for call to this functions
+  BATS_STACK_TRACE_LIMIT=$((${#FUNCNAME[@]} - 1)) # adjust by -1 to account for call to this functions
 }
 
 bats_capture_stack_trace() {
@@ -14,9 +14,9 @@ bats_capture_stack_trace() {
   local i
 
   BATS_DEBUG_LAST_STACK_TRACE=()
-  local limit=$(( ${#FUNCNAME[@]} - ${BATS_STACK_TRACE_LIMIT-0} ))
+  local limit=$((${#FUNCNAME[@]} - ${BATS_STACK_TRACE_LIMIT-0}))
   # TODO: why is the line number off by one in  @test "--trace recurses into functions but not into run"
-  for ((i = 2; i < limit ; ++i)); do
+  for ((i = 2; i < limit; ++i)); do
     # Use BATS_TEST_SOURCE if necessary to work around Bash < 4.4 bug whereby
     # calling an exported function erases the test file's BASH_SOURCE entry.
     test_file="${BASH_SOURCE[$i]:-$BATS_TEST_SOURCE}"
@@ -195,26 +195,28 @@ bats_emit_trace() {
   if [[ ${BATS_TRACE_LEVEL:-0} -gt 0 ]]; then
     local line=${BASH_LINENO[1]} limit=${BATS_STACK_TRACE_LIMIT-0}
     # shellcheck disable=SC2016
-    if (( ${#FUNCNAME[@]} > limit + 2 ))  # only emit below BATS_STRACK_TRACE_LIMIT (adjust by 2 for trap+this function call)
+    if
+      ((${#FUNCNAME[@]} > limit + 2)) # only emit below BATS_STRACK_TRACE_LIMIT (adjust by 2 for trap+this function call)
       # avoid printing the same line twice on errexit
-      [[ $BASH_COMMAND != "$BATS_LAST_BASH_COMMAND" || $line != "$BATS_LAST_BASH_LINENO" ]]; then
+      [[ $BASH_COMMAND != "$BATS_LAST_BASH_COMMAND" || $line != "$BATS_LAST_BASH_LINENO" ]]
+    then
       local file="${BASH_SOURCE[2]}" # index 2: skip over bats_emit_trace and bats_debug_trap
       if [[ $file == "${BATS_TEST_SOURCE:-}" ]]; then
         file="$BATS_TEST_FILENAME"
       fi
       # stack size difference since last call of this function
-      # <0: means new function call  
+      # <0: means new function call
       # >0: means return
       # =0: in same function as before (assuming we did not skip return/call)
-      local stack_diff=$(( BATS_LAST_STACK_DEPTH - ${#BASH_LINENO[@]} ))
+      local stack_diff=$((BATS_LAST_STACK_DEPTH - ${#BASH_LINENO[@]}))
       # show context immediately when returning or on second command in new function
       # as the first "command" is the function itself
-      if (( stack_diff > 0 )) || (( BATS_EMIT_TRACE_LAST_STACK_DIFF < 0 )); then
-          bats_emit_trace_context
+      if ((stack_diff > 0)) || ((BATS_EMIT_TRACE_LAST_STACK_DIFF < 0)); then
+        bats_emit_trace_context
       fi
       # only print command when moving up or staying in same function
       # again, avoids printing the first command (the function itself) in new function
-      if (( stack_diff >= 0 )); then
+      if ((stack_diff >= 0)); then
         bats_emit_trace_command
       fi
 
@@ -287,7 +289,7 @@ bats_debug_trap() {
   # don't update the trace within library functions or we get backtraces from inside traps
   # also don't record new stack traces while handling interruptions, to avoid overriding the interrupted command
   if [[ "${BATS_INTERRUPTED-NOTSET}" == NOTSET &&
-        "${BATS_TIMED_OUT-NOTSET}" == NOTSET ]]; then
+    "${BATS_TIMED_OUT-NOTSET}" == NOTSET ]]; then
     BATS_DEBUG_LASTLAST_STACK_TRACE=(
       ${BATS_DEBUG_LAST_STACK_TRACE[@]+"${BATS_DEBUG_LAST_STACK_TRACE[@]}"}
     )

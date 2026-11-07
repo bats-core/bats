@@ -216,6 +216,6 @@ check_parallel_tests() { # <expected maximum parallelity>
 @test "Negative jobs number does not run endlessly" {
   unset BATS_NO_PARALLELIZE_ACROSS_FILES
   run bats -j -3 "$FIXTURE_ROOT/../bats/passing.bats"
-  (( SECONDS < 5 ))
+  ((SECONDS < 5))
   [ "${lines[1]}" = 'Invalid number of jobs: -3' ]
 }

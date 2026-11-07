@@ -69,7 +69,6 @@ output_binary_data_and_returns_with_given_code() {
 @test "run bats_pipe with single command with no args" {
   run -1 bats_pipe describe_args
 
-
   [ "${#lines[@]}" -eq 1 ]
   [ "${lines[0]}" = "Usage error: No \`\\|\`s found. Is this an error?" ]
 }

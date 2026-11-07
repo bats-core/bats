@@ -70,7 +70,7 @@ bats_linear_reverse_search() { # <search-value> <array-name>
   local -r search_value=$1 array_name=$2
   eval "local -ri array_length=\${#${array_name}[@]}"
   # shellcheck disable=SC2154
-  for ((i=array_length - 1; i >=0; --i)); do
+  for ((i = array_length - 1; i >= 0; --i)); do
     eval "local value=\"\${${array_name}[i]}\""
     # shellcheck disable=SC2154
     if [[ $value == "$search_value" ]]; then
@@ -131,11 +131,11 @@ bats_sort() { # <result-array-name> <values to sort...>
 
   local -a sorted_array=()
   local -i i
-  while (( $# > 0 )); do # loop over input values
+  while (($# > 0)); do # loop over input values
     local current_value="$1"
     shift
     for ((i = ${#sorted_array[@]}; i >= 0; --i)); do # loop over output array from end
-      if (( i == 0 )) || [[ ${sorted_array[i - 1]} < $current_value ]]; then
+      if ((i == 0)) || [[ ${sorted_array[i - 1]} < $current_value ]]; then
         # insert new element at (freed) desired location
         sorted_array[i]=$current_value
         break

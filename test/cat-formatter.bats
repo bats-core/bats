@@ -49,7 +49,7 @@ fixtures bats # reuse bats fixtures
 
 @test "Cat formatter prints the extended tap stream" {
   cd "$BATS_ROOT/libexec/bats-core/"
-  
+
   local formatter="bats-format-cat"
 
   reentrant_run bash -u "$formatter" <<EOF

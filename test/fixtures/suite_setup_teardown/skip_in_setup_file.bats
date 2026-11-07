@@ -1,11 +1,11 @@
 setup_file() {
-    skip Reason
+  skip Reason
 }
 
 @test first {
-    false
+  false
 }
 
 @test second {
-    true
+  true
 }

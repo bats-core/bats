@@ -9,7 +9,7 @@ TESTSUITES_REGEX="<testsuites time=\"$FLOAT_REGEX\">"
 
 @test "junit formatter with skipped test does not fail" {
   reentrant_run bats --formatter junit "$FIXTURE_ROOT/skipped.bats"
-  
+
   [[ $status -eq 0 ]]
   [[ "${lines[0]}" == '<?xml version="1.0" encoding="UTF-8"?>' ]]
 
@@ -94,7 +94,7 @@ TESTSUITES_REGEX="<testsuites time=\"$FLOAT_REGEX\">"
 
 @test "junit formatter: files with the same name are distinguishable" {
   reentrant_run bats --formatter junit -r "$FIXTURE_ROOT/duplicate/"
-  
+
   [[ "${lines[2]}" == *"<testsuite name=\"first/file1.bats\""* ]]
   [[ "${lines[5]}" == *"<testsuite name=\"second/file1.bats\""* ]]
 }
@@ -103,10 +103,10 @@ TESTSUITES_REGEX="<testsuites time=\"$FLOAT_REGEX\">"
   cd "$BATS_TEST_TMPDIR" # don't litter sources with output files
   reentrant_run bats --report-formatter junit "$FIXTURE_ROOT/suite/"
   echo "$output" # duplicate for later comparison
-  
+
   [[ -e "report.xml" ]]
   run cat "report.xml"
-  
+
   [[ "${lines[2]}" == *"<testsuite name=\"file1.bats\" tests=\"1\" failures=\"0\" errors=\"0\" skipped=\"0\""* ]]
   [[ "${lines[5]}" == *"<testsuite name=\"file2.bats\" tests=\"1\" failures=\"0\" errors=\"0\" skipped=\"0\""* ]]
 }
@@ -153,7 +153,10 @@ TESTSUITES_REGEX="<testsuites time=\"$FLOAT_REGEX\">"
   bats_require_minimum_version 1.5.0
   local stderr='' # silence shellcheck
   name=non-empty reentrant_run -0 --separate-stderr bats --formatter junit "$FIXTURE_ROOT/issue1180"
-  [ "${stderr}" == "" ] || { echo "stderr should be empty but was: ${stderr}" >&3; return 1; }
+  [ "${stderr}" == "" ] || {
+    echo "stderr should be empty but was: ${stderr}" >&3
+    return 1
+  }
   [[ "${output}" != *'<failure '* ]]
   [[ "${output}" == *'teardown_suite fd3'* ]]
 }

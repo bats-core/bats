@@ -1,3 +1,3 @@
 @test "dummy" {
-    true
+  true
 }

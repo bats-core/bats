@@ -55,7 +55,7 @@ function bats_parse_internal_extended_tap() {
       begin_index=${line#begin }
       begin_index=${begin_index%% *}
       if [[ $begin_index == "$last_begin_index" ]]; then
-        (( ++try_index ))
+        ((++try_index))
       else
         try_index=0
       fi

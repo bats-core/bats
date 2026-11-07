@@ -178,16 +178,16 @@ if [[ -n "$focus_mode" ]]; then
 fi
 
 bats_exit_suite() {
-if [[ "$focus_mode" == 1 && $bats_exec_suite_status -eq 0 ]]; then
-  if [[ ${BATS_NO_FAIL_FOCUS_RUN-} == 1 ]]; then
-    printf "WARNING: This test run only contains tests tagged \`bats:focus\`!\n" >&2
-  else
-    printf "Marking test run as failed due to \`bats:focus\` tag. (Set \`BATS_NO_FAIL_FOCUS_RUN=1\` to disable.)\n" >&2
-    bats_exec_suite_status=1
+  if [[ "$focus_mode" == 1 && $bats_exec_suite_status -eq 0 ]]; then
+    if [[ ${BATS_NO_FAIL_FOCUS_RUN-} == 1 ]]; then
+      printf "WARNING: This test run only contains tests tagged \`bats:focus\`!\n" >&2
+    else
+      printf "Marking test run as failed due to \`bats:focus\` tag. (Set \`BATS_NO_FAIL_FOCUS_RUN=1\` to disable.)\n" >&2
+      bats_exec_suite_status=1
+    fi
   fi
-fi
 
-exit "$bats_exec_suite_status" # the actual exit code will be set by the exit trap using bats_exec_suite_status
+  exit "$bats_exec_suite_status" # the actual exit code will be set by the exit trap using bats_exec_suite_status
 }
 
 bats_exec_suite_status=0
@@ -196,7 +196,7 @@ printf '1..%d\n' "${test_count}"
 # No point on continuing if there's no tests.
 if [[ "${test_count}" == 0 ]]; then
   bats_exec_suite_status=$BATS_EMPTY_SUITE_STATUS
-  if (( bats_exec_suite_status != 0)); then
+  if ((bats_exec_suite_status != 0)); then
     printf "ERROR: Found no tests. Use \`--allow-empty-suite\` or \`BATS_ALLOW_EMPTY_SUITE=1\` to suppress this error." >&2
   fi
   bats_exit_suite
@@ -317,24 +317,24 @@ fi
 
 if [[ "$num_jobs" -gt 1 ]] && [[ -z "$bats_no_parallelize_across_files" ]]; then
   parallel_flags=(--keep-order --jobs "$num_jobs")
-  if (( BATS_ABORT_ON_FAILURE )); then
+  if ((BATS_ABORT_ON_FAILURE)); then
     parallel_flags+=('--halt' 'now,fail=1')
   fi
   # run files in parallel to get the maximum pool of parallel tasks
   # shellcheck disable=SC2086,SC2068
   # we need to handle the quoting of ${flags[@]} ourselves,
   # because parallel can only quote it as one
-  "${parallel_binary_name}" "${parallel_flags[@]}" -- "bats-exec-file" "$(printf "%q " "${flags[@]}")" "{#}" "{}" "$TESTS_LIST_FILE" <<< "$(printf "%s\n" "${BATS_UNIQUE_TEST_FILENAMES[@]}")" 2>&1 || bats_exec_suite_status=1
+  "${parallel_binary_name}" "${parallel_flags[@]}" -- "bats-exec-file" "$(printf "%q " "${flags[@]}")" "{#}" "{}" "$TESTS_LIST_FILE" <<<"$(printf "%s\n" "${BATS_UNIQUE_TEST_FILENAMES[@]}")" 2>&1 || bats_exec_suite_status=1
 else
   file_index=0
   for filename in "${BATS_UNIQUE_TEST_FILENAMES[@]}"; do
-    (( ++file_index ))
+    ((++file_index))
     if [[ "${BATS_INTERRUPTED-NOTSET}" != NOTSET ]]; then
       bats_exec_suite_status=130 # bash's code for SIGINT exits
       break
     fi
     bats-exec-file "${flags[@]}" "$file_index" "$filename" "${TESTS_LIST_FILE}" || bats_exec_suite_status=1
-    if (( BATS_ABORT_ON_FAILURE && bats_exec_suite_status > 0 )); then
+    if ((BATS_ABORT_ON_FAILURE && bats_exec_suite_status > 0)); then
       break
     fi
   done

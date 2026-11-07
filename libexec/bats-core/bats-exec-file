@@ -92,7 +92,7 @@ bats_run_setup_file() {
   BATS_TEARDOWN_FILE_COMPLETED=
   # shellcheck disable=2034
   BATS_ERROR_STATUS= # used in tracing.bash
-  
+
   touch "$BATS_OUT"
   bats_setup_tracing
   trap 'bats_file_teardown_trap' EXIT
@@ -114,7 +114,7 @@ bats_run_teardown_file() {
   local bats_teardown_file_status=0
   # avoid running the therdown trap due to errors in teardown_file
   trap 'bats_file_exit_trap' EXIT
-  
+
   bats_set_stacktrace_limit
 
   # rely on bats_error_trap to catch failures
@@ -150,7 +150,7 @@ bats_file_exit_trap() {
   if [[ -n "${BATS_TEST_SKIPPED-}" ]]; then
     export BATS_TEST_SKIPPED # indicate to exec-test that it should skip
     # print skip message for each test (use this to avoid reimplementing filtering)
-    bats_run_tests 1<&3 # restore original stdout (this is running in setup_file's redirection to BATS_OUT)
+    bats_run_tests 1<&3     # restore original stdout (this is running in setup_file's redirection to BATS_OUT)
     bats_exec_file_status=0 # this should not lead to errors
   elif [[ -z "$BATS_SETUP_FILE_COMPLETED" || -z "$BATS_TEARDOWN_FILE_COMPLETED" ]]; then
     if [[ -z "$BATS_SETUP_FILE_COMPLETED" ]]; then
@@ -271,7 +271,7 @@ bats_run_tests_in_parallel() {
     fi
     # print results early to get interactive feedback
     bats_forward_output_for_parallel_tests non-blocking || status=1 # ignore if we did not finish yet
-    if (( BATS_ABORT_ON_FAILURE && status >0 )); then
+    if ((BATS_ABORT_ON_FAILURE && status > 0)); then
       break
     fi
   done
@@ -310,7 +310,7 @@ bats_run_tests() {
   if [[ "${BATS_RUN_TESTS_SKIPPED-}" ]]; then
     # shellcheck disable=SC2317,SC2329
     bats_test_begin() {
-      printf "ok %d %s # skip %s\n" "$test_number_in_suite" "$1" "$BATS_RUN_TESTS_SKIPPED_REASON"  >&3
+      printf "ok %d %s # skip %s\n" "$test_number_in_suite" "$1" "$BATS_RUN_TESTS_SKIPPED_REASON" >&3
       return 1
     }
     local test_number_in_suite=0
@@ -344,7 +344,7 @@ bats_run_tests() {
         ((++test_number_in_file))
         bats_run_test_with_retries "${flags[@]}" "$filename" "$test_name" \
           "$test_number_in_suite" "$test_number_in_file" || bats_exec_file_status=$?
-        if (( BATS_ABORT_ON_FAILURE && bats_exec_file_status > 0 )); then
+        if ((BATS_ABORT_ON_FAILURE && bats_exec_file_status > 0)); then
           break
         fi
       fi

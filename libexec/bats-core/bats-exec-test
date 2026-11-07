@@ -75,7 +75,7 @@ bats_create_test_tmpdirs() {
     exit 1
   fi
 
-  printf "%s\n" "$BATS_TEST_NAME" >> "$BATS_TEST_TMPDIR.name" # append name in case of test retries
+  printf "%s\n" "$BATS_TEST_NAME" >>"$BATS_TEST_TMPDIR.name" # append name in case of test retries
 
   export BATS_TEST_TMPDIR
 }
@@ -159,7 +159,7 @@ bats_exit_trap() {
       rm -r "$BATS_TEST_TMPDIR" # clean up for retry
     else
       printf 'not ok %d %s%s\n' "$BATS_SUITE_TEST_NUMBER" "${BATS_TEST_NAME_PREFIX:-}${BATS_TEST_DESCRIPTION}${BATS_TEST_TIME}" "$exit_metadata" >&3
-      if (( ${#BATS_TEST_TAGS[@]} > 0 )); then
+      if ((${#BATS_TEST_TAGS[@]} > 0)); then
         printf '# tags:'
         printf ' %s' "${BATS_TEST_TAGS[@]}"
         printf '\n'
@@ -244,26 +244,26 @@ bats_find_processes_of() { # <parent-pid>
     # 6   5     (2 5 6)
     # assumes pids are in ascending order and there are no orphans in the chain
 
-    if (( BASH_VERSINFO[0] < 4 )); then
+    if ((BASH_VERSINFO[0] < 4)); then
       # BASHPID is not available before bash 4
       BASHPID=$(sh -c 'echo $PPID')
     fi
     while read -ra row; do
       local -i ppid=${row[ppid_col]} pid=${row[$pid_col]}
-      if (( ppid == parent_pid)) || bats_linear_reverse_search "$ppid" child_pids; then
+      if ((ppid == parent_pid)) || bats_linear_reverse_search "$ppid" child_pids; then
         # exclude `ps` command substitution below
-        if (( pid != BASHPID)); then
+        if ((pid != BASHPID)); then
           child_pids+=("$pid")
         fi
       fi
     done
-  # MSYS does not support -o and rows are not sorted by pid
+    # MSYS does not support -o and rows are not sorted by pid
   } < <(ps -Ao pid,ppid,args 2>/dev/null || { ps -ef | sort -k 2 -h; })
 }
 
 # send signal to process and all its descendants
 bats_kill_processes_of() { # <parent-pid> [<signal>]
-  local -ir parent_pid="${1?}" 
+  local -ir parent_pid="${1?}"
   local -r signal=${2?}
   bats_find_processes_of "$parent_pid"
   kill "-$signal" "${child_pids[@]}"
@@ -283,9 +283,12 @@ bats_start_timeout_countdown() { # <timeout>
   (
     # with sleep in foreground this shell wouldn't receive signals,
     # so we use wait below and kill sleep explicitly when signalled to do so
-    # On Windows the TERM signal does not seem to shut down sleep -> 
+    # On Windows the TERM signal does not seem to shut down sleep ->
     # close all fds to avoid blocking IO when sleep does not turn off
-    (eval exec {0..255}">&-"; sleep "$timeout") &
+    (
+      eval exec {0..255}">&-"
+      sleep "$timeout"
+    ) &
     # shellcheck disable=SC2064
     trap "kill $!; exit 0" TERM
     wait
@@ -299,27 +302,26 @@ bats_abort_timeout_countdown() {
   kill "$BATS_killer_pid" &>/dev/null || true
 }
 
-
-if [[ -n "${EPOCHREALTIME-}"  ]]; then
-get_mills_since_epoch() { # <output-variable>
-  local -r output_variable="$1"
-  local int frac
-  # allow for different decimal separators
-  IFS=., read -r int frac <<<"$EPOCHREALTIME"
-  printf -v "$output_variable" "%d" "${int}${frac::3}"
-}
+if [[ -n "${EPOCHREALTIME-}" ]]; then
+  get_mills_since_epoch() { # <output-variable>
+    local -r output_variable="$1"
+    local int frac
+    # allow for different decimal separators
+    IFS=., read -r int frac <<<"$EPOCHREALTIME"
+    printf -v "$output_variable" "%d" "${int}${frac::3}"
+  }
 else
-get_mills_since_epoch() { # <output-variable>
-  local -r output_variable="$1"
-  local ms_since_epoch
-  ms_since_epoch=$(bats_execute date +%s%N)
-  if [[ "$ms_since_epoch" == *N || "${#ms_since_epoch}" -lt 19 ]]; then
-    ms_since_epoch=$(($(bats_execute date +%s) * 1000))
-  else
-    ms_since_epoch=$((ms_since_epoch / 1000000))
-  fi
-  printf -v "$output_variable" "%d" "$ms_since_epoch"
-}
+  get_mills_since_epoch() { # <output-variable>
+    local -r output_variable="$1"
+    local ms_since_epoch
+    ms_since_epoch=$(bats_execute date +%s%N)
+    if [[ "$ms_since_epoch" == *N || "${#ms_since_epoch}" -lt 19 ]]; then
+      ms_since_epoch=$(($(bats_execute date +%s) * 1000))
+    else
+      ms_since_epoch=$((ms_since_epoch / 1000000))
+    fi
+    printf -v "$output_variable" "%d" "$ms_since_epoch"
+  }
 fi
 
 bats_perform_test() {

@@ -36,7 +36,7 @@ setup() {
     $'\x1b[0m'
   )
 
-  for ((i=0; i < ${#expected_lines[@]}; ++i)); do
+  for ((i = 0; i < ${#expected_lines[@]}; ++i)); do
     if ! [[ "${lines[i]}" = *"${expected_lines[i]}"* ]]; then
       echo "line $i:"
       diff --unified <(xxd <<<"${lines[i]}") <(xxd <<<"${expected_lines[i]}")

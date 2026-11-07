@@ -24,6 +24,6 @@ install -m 644 "$BATS_ROOT/man/bats.7" "$PREFIX/share/man/man7"
 
 read -rd '' BATS_EXE_CONTENTS <"$PREFIX/bin/bats" || true
 BATS_EXE_CONTENTS=${BATS_EXE_CONTENTS/"BATS_BASE_LIBDIR=lib"/"BATS_BASE_LIBDIR=${LIBDIR}"}
-printf "%s" "$BATS_EXE_CONTENTS" >| "$PREFIX/bin/bats"
+printf "%s" "$BATS_EXE_CONTENTS" >|"$PREFIX/bin/bats"
 
 echo "Installed Bats to $PREFIX/bin/bats"

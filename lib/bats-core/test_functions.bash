@@ -239,7 +239,7 @@ bats_pipe() { # [-N] [--] command0 [ \| command1 [ \| command2 [...]]]
   local -i pipe_count=0
   local -i previous_pipe_index=-1
   local -i index=0
-  for (( index = 0; index < $#; index++ )); do
+  for ((index = 0; index < $#; index++)); do
     local current_command_or_arg="${commands_and_args[$index]}"
     local escaped_arg="$current_command_or_arg"
     if [[ "$current_command_or_arg" != '|' ]]; then
@@ -250,22 +250,22 @@ bats_pipe() { # [-N] [--] command0 [ \| command1 [ \| command2 [...]]]
         printf "Usage error: Cannot have leading \`\\|\`.\n" >&2
         return 1
       fi
-      if (( (previous_pipe_index + 1) >= index )); then
+      if (((previous_pipe_index + 1) >= index)); then
         printf "Usage error: Cannot have consecutive \`\\|\`. Found at argument position '%s'.\n" "$index" >&2
         return 1
       fi
-      (( ++pipe_count ))
+      ((++pipe_count))
       previous_pipe_index="$index"
     fi
     escaped_args+=("$escaped_arg")
   done
 
-  if (( (previous_pipe_index > 0) && (previous_pipe_index == ($# - 1)) )); then
+  if (((previous_pipe_index > 0) && (previous_pipe_index == ($# - 1)))); then
     printf "Usage error: Cannot have trailing \`\\|\`.\n" >&2
     return 1
   fi
 
-  if (( pipe_count == 0 )); then
+  if ((pipe_count == 0)); then
     # Don't allow for no pipes. This might be a typo in the test,
     # e.g. `run bats_pipe command0 | command1`
     # instead of `run bats_pipe command0 \| command1`
@@ -277,7 +277,7 @@ bats_pipe() { # [-N] [--] command0 [ \| command1 [ \| command2 [...]]]
 
   # there will be pipe_count + 1 entries in PIPE_STATUS (pipe_count number of \|'s between each entry).
   # valid indices are [-(pipe_count + 1), pipe_count]
-  if [ -n "$pipestatus_position" ] && (( (pipestatus_position > pipe_count) || (-pipestatus_position > (pipe_count + 1)) )); then
+  if [ -n "$pipestatus_position" ] && (((pipestatus_position > pipe_count) || (-pipestatus_position > (pipe_count + 1)))); then
     printf "Usage error: Too large of -N argument (or --returned-status) given. Argument value: '%s'.\n" "$pipestatus_position" >&2
     return 1
   fi
@@ -295,12 +295,12 @@ bats_pipe() { # [-N] [--] command0 [ \| command1 [ \| command2 [...]]]
       # OSX bash doesn't support negative indexing.
       local backward_iter_index="$((${#__bats_pipe_eval_pipe_status[@]} - index - 1))"
       local status_at_backward_iter_index="${__bats_pipe_eval_pipe_status[$backward_iter_index]}"
-      if (( status_at_backward_iter_index != 0 )); then
+      if ((status_at_backward_iter_index != 0)); then
         result_status="$status_at_backward_iter_index"
-        break;
+        break
       fi
     done
-  elif (( pipestatus_position >= 0 )); then
+  elif ((pipestatus_position >= 0)); then
     result_status="${__bats_pipe_eval_pipe_status[$pipestatus_position]}"
   else
     # Must use positive values for some bash's (like OSX).
@@ -489,33 +489,33 @@ skip() {
 
 bats_test_function() {
   local tags=() current_tags=()
-  while (( $# > 0 )); do
+  while (($# > 0)); do
     case "$1" in
-      --description)
-        local test_description=
-        # use eval to resolve variable references in test names
-        eval "printf -v test_description '%s' \"$2\""
-        shift 2
+    --description)
+      local test_description=
+      # use eval to resolve variable references in test names
+      eval "printf -v test_description '%s' \"$2\""
+      shift 2
       ;;
-      --tags)
-        if [[ "$2" != "" ]]; then # avoid unbound variable with set -u Bash 3
-          IFS=',' read -ra current_tags <<<"$2"
-          tags+=("${current_tags[@]}")
-        fi
-        shift 2
+    --tags)
+      if [[ "$2" != "" ]]; then # avoid unbound variable with set -u Bash 3
+        IFS=',' read -ra current_tags <<<"$2"
+        tags+=("${current_tags[@]}")
+      fi
+      shift 2
       ;;
-      --)
-        shift
-        break
+    --)
+      shift
+      break
       ;;
-      *)
-        printf "ERROR: unknown option %s for bats_test_function" "$1" >&2
-        exit 1
+    *)
+      printf "ERROR: unknown option %s for bats_test_function" "$1" >&2
+      exit 1
       ;;
     esac
   done
 
-  if (( ${#tags[@]} > 1 )); then # avoid unbound variable with set -u Bash 3
+  if ((${#tags[@]} > 1)); then # avoid unbound variable with set -u Bash 3
     bats_sort tags "${tags[@]}"
   fi
 
@@ -526,12 +526,12 @@ bats_test_function() {
 
   # if this is the currently selected test, set tags and name
   # this should only be entered from bats-exec-test
-  if [[ ${BATS_TEST_NAME-} == "$quoted_parameters"  ]]; then
+  if [[ ${BATS_TEST_NAME-} == "$quoted_parameters" ]]; then
     # shellcheck disable=SC2034
     BATS_TEST_TAGS=("${tags[@]+${tags[@]}}")
     export BATS_TEST_DESCRIPTION="${test_description-$*}"
     # shellcheck disable=SC2034
-    BATS_TEST_COMMAND=("$@")    
+    BATS_TEST_COMMAND=("$@")
   fi
 }
 
